@@ -14,7 +14,7 @@ public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "idUser")
-    @JsonProperty("idUuser")
+    @JsonProperty("idUser")
     private Integer id;
 
     @Column(name = "userName", unique = true, nullable = false, length = 50)
@@ -33,11 +33,11 @@ public class User {
     /*@OneToOne
     @JoinColumn(name = "client", referencedColumnName = "idClient")
     @JsonProperty("client")
-    private Client client;
+    private Client client;*/
 
     // Relación con Stylist
     @OneToOne
     @JoinColumn(name = "stylist", referencedColumnName = "idStylist")
     @JsonProperty("stylist")
-    private Stylist stylist;*/
+    private Stylist stylist;
 }
