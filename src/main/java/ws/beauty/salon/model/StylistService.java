@@ -16,11 +16,11 @@ public class StylistService {
     @EmbeddedId
     private StylistService id;
 
-    //@ManyToOne(fetch = FetchType.LAZY)
-   // @MapsId("idStylist")
+    @ManyToOne(fetch = FetchType.LAZY)
+    @MapsId("idStylist")
     @JoinColumn(name = "id_stylist")
     //Clse de Stylist
-    //private Stylist stylist;
+    private Stylist stylist;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @MapsId("idService")

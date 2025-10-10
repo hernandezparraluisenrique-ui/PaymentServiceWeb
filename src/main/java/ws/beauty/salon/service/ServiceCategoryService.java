@@ -1,18 +1,45 @@
 package ws.beauty.salon.service;
 
 import java.util.List;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.stereotype.Service;
+import jakarta.transaction.Transactional;
+import ws.beauty.salon.model.ServiceCategory;
+import ws.beauty.salon.repository.ServiceCategoryRepository;
 
-import ws.beauty.salon.dto.ServiceCategoryRequest;
-import ws.beauty.salon.dto.ServiceCategoryResponse;
+@Service
+@Transactional
+public class ServiceCategoryService {
 
-public interface ServiceCategoryService {
-    List<ServiceCategoryResponse> findAll();
+    @Autowired
+    private ServiceCategoryRepository repository;
 
-    ServiceCategoryResponse findById(Long idCategory);
+    public List<ServiceCategory> getAll() {
+        return repository.findAll();
+    }
 
-    ServiceCategoryResponse create(ServiceCategoryRequest req);
+    public List<ServiceCategory> getAll(int page, int pageSize) {
+        PageRequest pageRequest = PageRequest.of(page, pageSize);
+        Page<ServiceCategory> categories = repository.findAll(pageRequest);
+        return categories.getContent();
+    }
 
-    ServiceCategoryResponse update(Long idCategory, ServiceCategoryRequest req);
+    public ServiceCategory getById(Integer idCategory) {
+        return repository.findById(idCategory).orElse(null);
+    }
 
-    void delete(Long idCategory);
+    public ServiceCategory save(ServiceCategory category) {
+        return repository.save(category);
+    }
+
+    public void delete(Integer idCategory) {
+        repository.deleteById(idCategory);
+    }
+
+    public List<ServiceCategory> getByCategoryName(String categoryName) {
+        return repository.findByCategoryNameContainingIgnoreCase(categoryName);
+    }
 }
+

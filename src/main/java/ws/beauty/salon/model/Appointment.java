@@ -1,49 +1,43 @@
 package ws.beauty.salon.model;
+
+import com.fasterxml.jackson.annotation.JsonProperty;
+import jakarta.persistence.*;
+import lombok.Getter;
+import lombok.Setter;
 import java.time.LocalDateTime;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import jakarta.persistence.PrePersist;
-import jakarta.persistence.Table;
-import lombok.AllArgsConstructor;
-import lombok.Builder;
-import lombok.Data;
-import lombok.NoArgsConstructor;
-
-@Data
-@NoArgsConstructor
-@AllArgsConstructor
-@Builder
+@Getter
+@Setter
 @Entity
-@Table(name = "Appointment")
+@Table(name = "appointments")
 public class Appointment {
-     @Id
+
+    @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_appointment")
-    private Integer idAppointment;
+    @JsonProperty("id_appointment")
+    private Integer id;
 
     @Column(name = "appointment_datetime", nullable = false)
-    private LocalDateTime appointmentDatetime;
+    @JsonProperty("appointment_datetime")
+    private LocalDateTime appointmentDateTime;
 
     @Column(name = "status", length = 20)
-    private String status = "pending";
+    @JsonProperty("status")
+    private String status = "pending"; // valores posibles: pending, completed, canceled
 
-    @Column(name = "id_client", nullable = false)
-    private Integer idClient;
+    @ManyToOne
+    @JoinColumn(name = "id_client", referencedColumnName = "id_client")
+    @JsonProperty("client")
+    private Client client;
 
-    @Column(name = "id_stylist")
-    private Integer idStylist;
+    @ManyToOne
+    @JoinColumn(name = "id_stylist", referencedColumnName = "id_stylist")
+    @JsonProperty("stylist")
+    private Stylist stylist;
 
-    @Column(name = "id_service")
-    private Integer idService;
-
-    @PrePersist
-    void ensureDefaultStatus() {
-        if (status == null || status.isBlank()) {
-            status = "pending";
-        }
-    }
+    @ManyToOne
+    @JoinColumn(name = "id_service", referencedColumnName = "id_service")
+    @JsonProperty("service")
+    private Service service;
 }

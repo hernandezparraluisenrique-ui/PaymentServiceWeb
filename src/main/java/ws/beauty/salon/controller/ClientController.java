@@ -1,53 +1,105 @@
 package ws.beauty.salon.controller;
 
-import jakarta.validation.Valid;
-import lombok.RequiredArgsConstructor;
-
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import ws.beauty.salon.dto.ClientRequest;
-import ws.beauty.salon.dto.ClientResponse;
-import ws.beauty.salon.service.ClientService;
-
-import java.net.URI;
 import java.util.List;
 
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.*;
+import org.springframework.web.bind.annotation.*;
+
+import io.swagger.v3.oas.annotations.*;
+import io.swagger.v3.oas.annotations.tags.Tag;
+import ws.beauty.salon.dto.ClientRequestDTO;
+import ws.beauty.salon.model.Client;
+import ws.beauty.salon.service.ClientService;
+
 @RestController
-@RequestMapping("/api/v1/clients")
-@RequiredArgsConstructor
-@CrossOrigin(origins = "*", methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.DELETE, RequestMethod.PUT})
+@RequestMapping("clients")
+@CrossOrigin(origins = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE })
+@Tag(name = "Clients", description = "Provides methods for managing clients")
 public class ClientController {
 
-    private final ClientService service;
+    @Autowired
+    private ClientService service;
 
+    @Autowired
+    private ModelMapper modelMapper;
+
+    @Operation(summary = "Get all clients")
     @GetMapping
-    public List<ClientResponse> findAll() {
-        return service.findAll();
+    public List<Client> getAll() {
+        return service.getAll();
     }
 
-    @GetMapping("/{idClient}")
-    public ClientResponse getById(@PathVariable Long idClient) {
-        return service.findById(idClient);
+    @Operation(summary = "Get all clients with pagination")
+    @GetMapping(value = "pagination", params = { "page", "pageSize" })
+    public List<Client> getAllPaginated(@RequestParam(defaultValue = "0") int page,
+                                        @RequestParam(defaultValue = "10") int pageSize) {
+        return service.getAll(page, pageSize);
     }
 
+    @Operation(summary = "Get all clients ordered by name")
+    @GetMapping("orderByName")
+    public List<Client> getAllOrderByName() {
+        return service.getAllOrderByName();
+    }
+
+    @Operation(summary = "Get a client by ID")
+    @GetMapping("{idClient}")
+    public ResponseEntity<Client> getById(@PathVariable Integer idClient) {
+        Client client = service.getById(idClient);
+        return (client != null)
+                ? new ResponseEntity<>(client, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @Operation(summary = "Get a client by email")
+    @GetMapping("email/{email}")
+    public ResponseEntity<Client> getByEmail(@PathVariable String email) {
+        Client client = service.getByEmail(email);
+        return (client != null)
+                ? new ResponseEntity<>(client, HttpStatus.OK)
+                : new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    }
+
+    @Operation(summary = "Search clients by name")
+    @GetMapping("search/{name}")
+    public List<Client> searchByName(@PathVariable String name) {
+        return service.searchByName(name);
+    }
+
+    @Operation(summary = "Register a client")
     @PostMapping
-    public ResponseEntity<ClientResponse> create(@Valid @RequestBody ClientRequest req) {
-        ClientResponse created = service.create(req);
-        return ResponseEntity
-                .created(URI.create("/api/v1/clients/" + created.getIdClient()))
-                .body(created);
+    public ResponseEntity<ClientRequestDTO> add(@RequestBody ClientRequestDTO dto) {
+        Client saved = service.save(convertToEntity(dto));
+        return new ResponseEntity<>(convertToDTO(saved), HttpStatus.CREATED);
     }
 
-    @PutMapping("/{idClient}")
-    public ClientResponse update(@PathVariable Long idClient, @Valid @RequestBody ClientRequest req) {
-        return service.update(idClient, req);
+    @Operation(summary = "Update a client")
+    @PutMapping("{idClient}")
+    public ResponseEntity<ClientRequestDTO> update(@PathVariable Integer idClient,
+                                                   @RequestBody ClientRequestDTO dto) {
+        Client existing = service.getById(idClient);
+        if (existing == null) return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+
+        Client updated = convertToEntity(dto);
+        updated.setId(idClient);
+        service.save(updated);
+        return new ResponseEntity<>(convertToDTO(updated), HttpStatus.OK);
     }
 
-    @DeleteMapping("/{idClient}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long idClient) {
+    @Operation(summary = "Delete a client")
+    @DeleteMapping("{idClient}")
+    public ResponseEntity<Void> delete(@PathVariable Integer idClient) {
         service.delete(idClient);
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    private ClientRequestDTO convertToDTO(Client client) {
+        return modelMapper.map(client, ClientRequestDTO.class);
+    }
+
+    private Client convertToEntity(ClientRequestDTO dto) {
+        return modelMapper.map(dto, Client.class);
     }
 }
