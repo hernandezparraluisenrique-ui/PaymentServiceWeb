@@ -39,5 +39,5 @@ public class Appointment {
     @ManyToOne
     @JoinColumn(name = "id_service", referencedColumnName = "id_service")
     @JsonProperty("service")
-    private Service service;
+    private Service1 service;
 }

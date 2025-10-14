@@ -47,22 +47,25 @@ public class AttendanceLogController {
     public ResponseEntity<AttendanceLogRequestDTO> add(@RequestBody AttendanceLogRequestDTO dto) {
         AttendanceLog log = convertToEntity(dto);
 
-        // Obtener Stylist usando la instancia y manejar Optional
-        Optional<Stylist> optionalStylist = stylistService.getById(dto.getStylistId());
+        // Buscar el estilista por ID
+        Optional<Stylist> optionalStylist = stylistService.findById(dto.getStylistId());//findById(dto.getStylistId());
         if (optionalStylist.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // o 404 si prefieres
+            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // o NOT_FOUND si lo prefieres
         }
+
         log.setStylist(optionalStylist.get());
 
         AttendanceLog saved = service.save(log);
         return new ResponseEntity<>(convertToDTO(saved), HttpStatus.CREATED);
     }
 
-    private AttendanceLogRequestDTO convertToDTO(AttendanceLog log) {
-        return modelMapper.map(log, AttendanceLogRequestDTO.class);
-    }
-
     private AttendanceLog convertToEntity(AttendanceLogRequestDTO dto) {
-        return modelMapper.map(dto, AttendanceLog.class);
-    }
+    return modelMapper.map(dto, AttendanceLog.class);
+}
+
+private AttendanceLogRequestDTO convertToDTO(AttendanceLog entity) {
+    return modelMapper.map(entity, AttendanceLogRequestDTO.class);
+}
+
+
 }

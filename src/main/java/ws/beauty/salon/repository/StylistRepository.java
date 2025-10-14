@@ -10,15 +10,15 @@ import ws.beauty.salon.model.Stylist;
 
 public interface StylistRepository extends JpaRepository<Stylist, Integer> {
 
-    // Consulta nativa: busca estilistas por especialidad exacta
+    // Consulta nativa: estilistas por especialidad exacta
     @Query(value = "SELECT * FROM stylists WHERE specialty = :specialty", nativeQuery = true)
     List<Stylist> getStylistsBySpecialty(@Param("specialty") String specialty);
 
-    // Consulta JPQL: busca estilistas por coincidencia parcial en la especialidad
+    // Consulta JPQL: coincidencia parcial en especialidad
     @Query("SELECT s FROM Stylist s WHERE LOWER(s.specialty) LIKE LOWER(CONCAT('%', :specialty, '%'))")
     List<Stylist> getStylistsBySpecialtyJPQL(@Param("specialty") String specialty);
 
-    // Consulta adicional: buscar estilistas disponibles
+    // Consulta estilistas disponibles
     @Query("SELECT s FROM Stylist s WHERE s.available = true")
     List<Stylist> getAvailableStylists();
 }

@@ -1,53 +1,15 @@
 package ws.beauty.salon.service;
 
+import ws.beauty.salon.dto.AppointmentNoteRequest;
+import ws.beauty.salon.dto.AppointmentNoteResponse;
+
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
-import jakarta.transaction.Transactional;
-import ws.beauty.salon.model.AppointmentNote;
-import ws.beauty.salon.model.Appointment;
-import ws.beauty.salon.repository.AppointmentNoteRepository;
-import ws.beauty.salon.repository.AppointmentRepository;
-
-@Service
-@Transactional
-public class AppointmentNoteService {
-
-    @Autowired
-    private AppointmentNoteRepository repository;
-
-    @Autowired
-    private AppointmentRepository appointmentRepository;
-
-    // Obtener todas las notas
-    public List<AppointmentNote> getAll() {
-        return repository.findAll();
-    }
-
-    // Obtener nota por ID
-    public Optional<AppointmentNote> getById(Integer idNote) {
-        return repository.findById(idNote);
-    }
-
-    // Guardar nota
-    public AppointmentNote save(AppointmentNote note) {
-        return repository.save(note);
-    }
-
-    // Eliminar nota
-    public void delete(Integer idNote) {
-        repository.deleteById(idNote);
-    }
-
-    // Asignar Appointment a la nota antes de guardar
-    public AppointmentNote assignAppointment(AppointmentNote note, Integer appointmentId) {
-        Appointment appointment = appointmentRepository.findById(appointmentId)
-                .orElseThrow(() -> new RuntimeException("Appointment not found"));
-        note.setAppointment(appointment);
-        return note;
-    }
+public interface AppointmentNoteService {
+    List<AppointmentNoteResponse> findAll();
+    List<AppointmentNoteResponse> findAllPaginated(int page, int size);
+    AppointmentNoteResponse findById(Integer id);
+    AppointmentNoteResponse create(AppointmentNoteRequest request);
+    AppointmentNoteResponse update(Integer id, AppointmentNoteRequest request);
+    void delete(Integer id);
 }
-

@@ -1,12 +1,16 @@
 package ws.beauty.salon.dto;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 @Data
-public class ReviewRequestDTO {
-
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class ReviewResponse {
     @JsonProperty("id Review")
     private Integer idReview;
 
@@ -26,4 +30,9 @@ public class ReviewRequestDTO {
 
     @JsonProperty("sentiment")
     private String sentiment;
+
+    private String firstName;
+
+    private String serviceName;
+
 }

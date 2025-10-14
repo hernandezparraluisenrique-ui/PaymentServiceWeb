@@ -1,14 +1,5 @@
 package ws.beauty.salon.controller;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -16,86 +7,112 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import io.swagger.v3.oas.annotations.tags.Tag;
-import ws.beauty.salon.dto.ReviewRequestDTO;
-import ws.beauty.salon.model.Review;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+import ws.beauty.salon.dto.ReviewRequest;
+import ws.beauty.salon.dto.ReviewResponse;
 import ws.beauty.salon.service.ReviewService;
 
+import java.util.List;
+
 @RestController
-@RequestMapping("reviews")
-@CrossOrigin(origins = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE })
-@Tag(name = "Reviews", description = "Provides methods for managing reviews")
+@RequestMapping("/api/reviews")
+@Tag(name = "Reviews", description = "Endpoints for managing client reviews")
 public class ReviewController {
 
     @Autowired
-    private ReviewService service;
+    private ReviewService reviewService;
 
-    @Autowired
-    private ModelMapper modelMapper;
-
-    // Obtener todas las reseñas
+    // 🔹 Obtener todos los reviews
     @Operation(summary = "Get all reviews")
-    @ApiResponse(responseCode = "200", description = "Found reviews",
-        content = @Content(mediaType = "application/json",
-        array = @ArraySchema(schema = @Schema(implementation = Review.class))))
+    @ApiResponse(responseCode = "200", description = "List of all reviews",
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = ReviewResponse.class))))
     @GetMapping
-    public List<Review> getAll() {
-        return service.getAll();
+    public List<ReviewResponse> getAll() {
+        return reviewService.findAll();
     }
 
-    // Obtener reseña por ID
-    @Operation(summary = "Get a review by its ID")
+    // 🔹 Obtener con paginación
+    @Operation(summary = "Get paginated reviews")
+    @ApiResponse(responseCode = "200", description = "List of reviews with pagination",
+            content = @Content(mediaType = "application/json",
+                    array = @ArraySchema(schema = @Schema(implementation = ReviewResponse.class))))
+    @GetMapping(value = "/pagination", params = {"page", "pageSize"})
+    public List<ReviewResponse> getAllPaginated(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        return reviewService.findAllPaginated(page, pageSize);
+    }
+
+    // 🔹 Obtener por ID
+    @Operation(summary = "Get a review by ID")
     @ApiResponses(value = {
-        @ApiResponse(responseCode = "200", description = "Review found",
-            content = @Content(mediaType = "application/json", schema = @Schema(implementation = Review.class))),
-        @ApiResponse(responseCode = "404", description = "Review not found", content = @Content)
+            @ApiResponse(responseCode = "200", description = "Review found",
+                    content = @Content(mediaType = "application/json",
+                            schema = @Schema(implementation = ReviewResponse.class))),
+            @ApiResponse(responseCode = "404", description = "Review not found")
     })
-    @GetMapping("{idReview}")
-    public ResponseEntity<Review> getById(@PathVariable Integer idReview) {
-        Optional<Review> review = service.getById(idReview);
-        return review.map(value -> new ResponseEntity<>(value, HttpStatus.OK))
-                     .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    @GetMapping("/{id}")
+    public ReviewResponse getById(@PathVariable Integer id) {
+        return reviewService.findById(id);
     }
 
-    // Obtener reseñas por cliente
-    @Operation(summary = "Get reviews by client ID")
-    @GetMapping("/client/{idClient}")
-    public List<Review> getByClient(@PathVariable Integer idClient) {
-        return service.getReviewsByClient(idClient);
-    }
-
-    // Obtener reseñas por servicio
-    @Operation(summary = "Get reviews by service ID")
-    @GetMapping("/service/{idService}")
-    public List<Review> getByService(@PathVariable Integer idService) {
-        return service.getReviewsByService(idService);
-    }
-
-    // Crear o actualizar reseña
-    @Operation(summary = "Create or update a review")
-    @ApiResponse(responseCode = "201", description = "Review created",
-        content = @Content(mediaType = "application/json", schema = @Schema(implementation = ReviewRequestDTO.class)))
+    // 🔹 Crear un review
+    @Operation(summary = "Create a new review")
+    @ApiResponse(responseCode = "201", description = "Review created successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ReviewResponse.class)))
     @PostMapping
-    public ResponseEntity<ReviewRequestDTO> add(@RequestBody ReviewRequestDTO reviewDTO) {
-        Review savedReview = service.save(convertToEntity(reviewDTO));
-        ReviewRequestDTO response = convertToDTO(savedReview);
-        return new ResponseEntity<>(response, HttpStatus.CREATED);
+    public ResponseEntity<ReviewResponse> create(@RequestBody ReviewRequest request) {
+        ReviewResponse saved = reviewService.create(request);
+        return new ResponseEntity<>(saved, HttpStatus.CREATED);
     }
 
-    // Eliminar reseña por ID
-    @Operation(summary = "Delete a review by its ID")
-    @ApiResponse(responseCode = "204", description = "Review deleted")
-    @DeleteMapping("{idReview}")
-    public ResponseEntity<Void> delete(@PathVariable Integer idReview) {
-        service.delete(idReview);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    // 🔹 Actualizar un review
+    @Operation(summary = "Update an existing review")
+    @ApiResponse(responseCode = "200", description = "Review updated successfully",
+            content = @Content(mediaType = "application/json",
+                    schema = @Schema(implementation = ReviewResponse.class)))
+    @PutMapping("/{id}")
+    public ReviewResponse update(@PathVariable Integer id, @RequestBody ReviewRequest request) {
+        return reviewService.update(id, request);
     }
 
-    // Conversiones DTO <-> Entity
-    private ReviewRequestDTO convertToDTO(Review review) {
-        return modelMapper.map(review, ReviewRequestDTO.class);
+    // 🔹 Eliminar un review
+    @Operation(summary = "Delete a review by ID")
+    @ApiResponse(responseCode = "204", description = "Review deleted successfully")
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Integer id) {
+        reviewService.delete(id);
     }
 
-    private Review convertToEntity(ReviewRequestDTO reviewDTO) {
-        return modelMapper.map(reviewDTO, Review.class);
+    // ---------------------- CONSULTAS ESPECIALIZADAS ----------------------
+
+    @Operation(summary = "Find reviews by client ID")
+    @GetMapping("/client/{clientId}")
+    public List<ReviewResponse> getByClientId(@PathVariable Integer clientId) {
+        return reviewService.findByClientId(clientId);
+    }
+
+    @Operation(summary = "Find reviews by service ID")
+    @GetMapping("/service/{serviceId}")
+    public List<ReviewResponse> getByServiceId(@PathVariable Integer serviceId) {
+        return reviewService.findByServiceId(serviceId);
+    }
+
+    @Operation(summary = "Find reviews by sentiment")
+    @GetMapping("/sentiment/{sentiment}")
+    public List<ReviewResponse> getBySentiment(@PathVariable String sentiment) {
+        return reviewService.findBySentiment(sentiment);
+    }
+
+    @Operation(summary = "Find reviews with rating greater or equal to a value")
+    @GetMapping("/rating/{rating}")
+    public List<ReviewResponse> getByRating(@PathVariable Integer rating) {
+        return reviewService.findByRatingGreaterOrEqual(rating);
     }
 }

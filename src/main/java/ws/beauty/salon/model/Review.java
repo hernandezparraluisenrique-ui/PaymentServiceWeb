@@ -18,7 +18,7 @@ public class Review {
     private Integer id;
 
     // Relación con Client
-    /*@ManyToOne
+    @ManyToOne
     @JoinColumn(name = "client", referencedColumnName = "idClient", nullable = false)
     @JsonProperty("client")
     private Client client;
@@ -27,7 +27,7 @@ public class Review {
     @ManyToOne
     @JoinColumn(name = "service", referencedColumnName = "idService", nullable = false)
     @JsonProperty("service")
-    private Service service;*/
+    private Service1 service;
 
     @Column(name = "comment")
     @JsonProperty("comment")

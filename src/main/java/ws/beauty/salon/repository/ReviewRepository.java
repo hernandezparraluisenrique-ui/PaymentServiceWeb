@@ -9,11 +9,21 @@ import ws.beauty.salon.model.Review;
 
 public interface ReviewRepository extends JpaRepository<Review, Integer> {
 
-    // Buscar reseñas por cliente
-    @Query("SELECT r FROM Review r WHERE r.client.id = :idClient")
-    List<Review> findByClientId(@Param("idClient") Integer idClient);
+    // Consultas especializadas
 
-    // Buscar reseñas por servicio
-    @Query("SELECT r FROM Review r WHERE r.service.id = :idService")
-    List<Review> findByServiceId(@Param("idService") Integer idService);
+    // Buscar reviews por cliente
+    @Query("SELECT r FROM Review r WHERE r.client.id = :clientId")
+    List<Review> findByClientId(@Param("clientId") Integer clientId);
+
+    // Buscar reviews por servicio
+    @Query("SELECT r FROM Review r WHERE r.service.id = :serviceId")
+    List<Review> findByServiceId(@Param("serviceId") Integer serviceId);
+
+    // Buscar reviews por sentimiento
+    @Query("SELECT r FROM Review r WHERE LOWER(r.sentiment) = LOWER(:sentiment)")
+    List<Review> findBySentiment(@Param("sentiment") String sentiment);
+
+    // Buscar reviews con calificación mayor o igual a cierta puntuación
+    @Query("SELECT r FROM Review r WHERE r.rating >= :rating")
+    List<Review> findByRatingGreaterOrEqual(@Param("rating") Integer rating);
 }

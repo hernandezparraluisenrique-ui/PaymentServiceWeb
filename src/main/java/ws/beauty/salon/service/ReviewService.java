@@ -1,49 +1,22 @@
 package ws.beauty.salon.service;
 
+import ws.beauty.salon.dto.ReviewRequest;
+import ws.beauty.salon.dto.ReviewResponse;
+
 import java.util.List;
-import java.util.Optional;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+public interface ReviewService {
 
-import jakarta.transaction.Transactional;
-import ws.beauty.salon.model.Review;
-import ws.beauty.salon.repository.ReviewRepository;
+    List<ReviewResponse> findAll();
+    List<ReviewResponse> findAllPaginated(int page, int pageSize);
+    ReviewResponse findById(Integer id);
+    ReviewResponse create(ReviewRequest request);
+    ReviewResponse update(Integer id, ReviewRequest request);
+    void delete(Integer id);
 
-@Service
-@Transactional
-public class ReviewService {
-
-    @Autowired
-    private ReviewRepository repository;
-
-    // Obtener todas las reseñas
-    public List<Review> getAll() {
-        return repository.findAll();
-    }
-
-    // Obtener reseñas por cliente
-    public List<Review> getReviewsByClient(Integer idClient) {
-        return repository.findByClientId(idClient);
-    }
-
-    // Obtener reseñas por servicio
-    public List<Review> getReviewsByService(Integer idService) {
-        return repository.findByServiceId(idService);
-    }
-
-    // Guardar o actualizar una reseña
-    public Review save(Review review) {
-        return repository.save(review);
-    }
-
-    // Buscar reseña por ID
-    public Optional<Review> getById(Integer idReview) {
-        return repository.findById(idReview);
-    }
-
-    // Eliminar reseña por ID
-    public void delete(Integer idReview) {
-        repository.deleteById(idReview);
-    }
+    // Consultas especializadas
+    List<ReviewResponse> findByClientId(Integer clientId);
+    List<ReviewResponse> findByServiceId(Integer serviceId);
+    List<ReviewResponse> findBySentiment(String sentiment);
+    List<ReviewResponse> findByRatingGreaterOrEqual(Integer rating);
 }
