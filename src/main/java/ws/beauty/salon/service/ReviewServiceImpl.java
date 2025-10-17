@@ -10,7 +10,6 @@ import ws.beauty.salon.dto.ReviewRequest;
 import ws.beauty.salon.dto.ReviewResponse;
 import ws.beauty.salon.model.Client;
 import ws.beauty.salon.model.Review;
-import ws.beauty.salon.model.Service1;
 import ws.beauty.salon.repository.ClientRepository;
 import ws.beauty.salon.repository.ReviewRepository;
 import ws.beauty.salon.repository.ServiceRepository;
@@ -57,9 +56,9 @@ public class ReviewServiceImpl implements ReviewService {
                 .orElseThrow(() -> new EntityNotFoundException("Client not found: " + request.getIdClient()));
         review.setClient(client);
 
-        Service1 service = serviceRepository.findById(request.getIdService())
+         serviceRepository.findById(request.getIdService())
                 .orElseThrow(() -> new EntityNotFoundException("Service not found: " + request.getIdService()));
-        review.setService(service);
+        review.setService(serviceRepository.findById(request.getIdService()).get());
 
         return mapToResponse(repository.save(review));
     }
@@ -78,9 +77,9 @@ public class ReviewServiceImpl implements ReviewService {
         }
 
         if (request.getIdService() != null) {
-            Service1 service = serviceRepository.findById(request.getIdService())
+             serviceRepository.findById(request.getIdService())
                     .orElseThrow(() -> new EntityNotFoundException("Service not found: " + request.getIdService()));
-            existing.setService(service);
+            existing.setService(serviceRepository.findById(request.getIdService()).get());
         }
 
         return mapToResponse(repository.save(existing));

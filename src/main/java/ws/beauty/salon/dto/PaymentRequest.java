@@ -4,30 +4,22 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import lombok.AllArgsConstructor;
-import lombok.Builder;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Positive;
 import lombok.Data;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
 
 
 @Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-@Getter
-@Setter
-public class PaymentResponse {
-    @JsonProperty("id payment")
-    private Integer id;
-
+public class PaymentRequest {
+    @NotNull(message = "Amount is required")
+    @Positive(message = "Amount must be positive")
     @JsonProperty("amount")
     private Double amount;
 
     @JsonProperty("payment date")
     private LocalDateTime paymentDate;
 
+    @NotNull(message = "Appointment ID is required")
     @JsonProperty("id appointment")
     private Integer appointmentId;
 }

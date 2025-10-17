@@ -1,5 +1,4 @@
 package ws.beauty.salon.repository;
-
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -10,28 +9,23 @@ import org.springframework.stereotype.Repository;
 
 import ws.beauty.salon.model.Notification;
 
+
 @Repository
-public interface NotificationRepository extends JpaRepository<Notification, Integer> {
+public interface NotificationRepository extends JpaRepository<Notification, Integer>{
+    // 🔹 Buscar notificaciones por cliente
+    @Query(value = "SELECT * FROM notifications WHERE id_client = :clientId", nativeQuery = true)
+    List<Notification> findByClientId(@Param("clientId") Integer clientId);
 
-    List<Notification> findByClientId(Integer clientId);
+    // 🔹 Buscar notificaciones enviadas por tipo (SMS, email, WhatsApp)
+    @Query(value = "SELECT * FROM notifications WHERE LOWER(sent_via) = LOWER(:sentVia)", nativeQuery = true)
+    List<Notification> findBySentVia(@Param("sentVia") String sentVia);
 
-    List<Notification> findBySentVia(String sentVia);
+    // 🔹 Buscar notificaciones en un rango de fechas
+    @Query(value = "SELECT * FROM notifications WHERE sent_at BETWEEN :start AND :end", nativeQuery = true)
+    List<Notification> findBySentAtBetween(@Param("start") LocalDateTime start, @Param("end") LocalDateTime end);
 
-    List<Notification> findByClientIdAndSentVia(Integer clientId, String sentVia);
-
-    List<Notification> findBySentAtBetween(LocalDateTime start, LocalDateTime end);
-
-    @Query("SELECT n FROM Notification n WHERE n.clientId = :clientId AND n.sentAt BETWEEN :start AND :end")
-    List<Notification> findByClientIdAndDateRange(@Param("clientId") Integer clientId,
-                                                  @Param("start") LocalDateTime start,
-                                                  @Param("end") LocalDateTime end);
-
-    long countByClientId(Integer clientId);
-
-    long countBySentVia(String sentVia);
-
-    List<Notification> findTop10ByClientIdOrderBySentAtDesc(Integer clientId);
-
-    @Query("SELECT n FROM Notification n WHERE n.sentAt >= :since ORDER BY n.sentAt DESC")
-    List<Notification> findRecentNotifications(@Param("since") LocalDateTime since);
+    // 🔹 Contar notificaciones por cliente
+    @Query(value = "SELECT COUNT(*) FROM notifications WHERE id_client = :clientId", nativeQuery = true)
+    long countByClientId(@Param("clientId") Integer clientId);
+   
 }

@@ -1,71 +1,88 @@
 package ws.beauty.salon.controller;
 
+import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Optional;
-
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
-import ws.beauty.salon.dto.AttendanceLogRequestDTO;
-import ws.beauty.salon.model.AttendanceLog;
-import ws.beauty.salon.model.Stylist;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import ws.beauty.salon.dto.AttendanceLogRequest;
+import ws.beauty.salon.dto.AttendanceLogResponse;
 import ws.beauty.salon.service.AttendanceLogService;
-import ws.beauty.salon.service.StylistService; // servicio para obtener Stylist
 
 @RestController
-@RequestMapping("/attendanceLogs")
-@CrossOrigin(origins = "*")
+@RequestMapping("/api/v3/attendance")
+@RequiredArgsConstructor
 public class AttendanceLogController {
-
-    @Autowired
-    private AttendanceLogService service;
-
-    @Autowired
-    private StylistService stylistService;
-
-    @Autowired
-    private ModelMapper modelMapper;
+     private final AttendanceLogService service;
 
     @GetMapping
-    public List<AttendanceLog> getAll() {
-        return service.getAll();
+    public List<AttendanceLogResponse> findAll() {
+        return service.findAll();
+    }
+
+    @GetMapping(value = "/pagination", params = { "page", "pageSize" })
+    public List<AttendanceLogResponse> findAll(
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int pageSize) {
+        if (page < 0 || pageSize < 0 || (page == 0 && pageSize == 0)) {
+            throw new IllegalArgumentException("Invalid pagination parameters.");
+        }
+        return service.findAll(page, pageSize);
     }
 
     @GetMapping("/{id}")
-    public ResponseEntity<AttendanceLog> getById(@PathVariable Integer id) {
-        return service.getAll().stream()
-                .filter(log -> log.getId().equals(id))
-                .findFirst()
-                .map(log -> new ResponseEntity<>(log, HttpStatus.OK))
-                .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
+    public AttendanceLogResponse findById(@PathVariable Integer id) {
+        return service.findById(id);
     }
 
     @PostMapping
-    public ResponseEntity<AttendanceLogRequestDTO> add(@RequestBody AttendanceLogRequestDTO dto) {
-        AttendanceLog log = convertToEntity(dto);
-
-        // Buscar el estilista por ID
-        Optional<Stylist> optionalStylist = stylistService.findById(dto.getStylistId());//findById(dto.getStylistId());
-        if (optionalStylist.isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST); // o NOT_FOUND si lo prefieres
-        }
-
-        log.setStylist(optionalStylist.get());
-
-        AttendanceLog saved = service.save(log);
-        return new ResponseEntity<>(convertToDTO(saved), HttpStatus.CREATED);
+    public ResponseEntity<AttendanceLogResponse> create(@Valid @RequestBody AttendanceLogRequest request) {
+        AttendanceLogResponse created = service.create(request);
+        return ResponseEntity.created(URI.create("/api/v1/attendance/" + created.getId())).body(created);
     }
 
-    private AttendanceLog convertToEntity(AttendanceLogRequestDTO dto) {
-    return modelMapper.map(dto, AttendanceLog.class);
-}
+    @PutMapping("/{id}")
+    public AttendanceLogResponse update(@PathVariable Integer id, @Valid @RequestBody AttendanceLogRequest request) {
+        return service.update(id, request);
+    }
 
-private AttendanceLogRequestDTO convertToDTO(AttendanceLog entity) {
-    return modelMapper.map(entity, AttendanceLogRequestDTO.class);
-}
+    @DeleteMapping("/{id}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void delete(@PathVariable Integer id) {
+        service.delete(id);
+    }
 
+    @GetMapping("/stylist/{stylistId}")
+    public List<AttendanceLogResponse> findByStylist(@PathVariable Integer stylistId) {
+        return service.findByStylistId(stylistId);
+    }
 
+    @GetMapping("/range")
+    public List<AttendanceLogResponse> findByDateRange(
+            @RequestParam LocalDateTime start,
+            @RequestParam LocalDateTime end) {
+        return service.findByCheckInBetween(start, end);
+    }
+
+    @GetMapping("/open/{stylistId}")
+    public boolean hasOpenAttendance(@PathVariable Integer stylistId) {
+        return service.hasOpenAttendance(stylistId);
+    }
+
+    @PutMapping("/close/{stylistId}")
+    public AttendanceLogResponse closeAttendance(@PathVariable Integer stylistId) {
+        return service.closeAttendance(stylistId);
+    }
 }

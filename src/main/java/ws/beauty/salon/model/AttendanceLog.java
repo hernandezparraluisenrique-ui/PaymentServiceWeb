@@ -30,8 +30,7 @@ public class AttendanceLog {
     private Integer id;
 
     @ManyToOne
-    @JoinColumn(name = "id_stylist", referencedColumnName = "id_stylist",
-                foreignKey = @ForeignKey(name = "fk_attendance_stylist"))
+    @JoinColumn(name = "id_stylist", referencedColumnName = "id_stylist")
     private Stylist stylist;
 
     @Column(name = "check_in")

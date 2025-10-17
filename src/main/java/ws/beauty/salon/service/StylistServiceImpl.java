@@ -1,4 +1,5 @@
 package ws.beauty.salon.service;
+
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +52,8 @@ public class StylistServiceImpl implements StylistService {
 
     @Override
     public void delete(Integer id) {
-        if (!repository.existsById(id)) throw new EntityNotFoundException("Stylist not found: " + id);
+        if (!repository.existsById(id))
+            throw new EntityNotFoundException("Stylist not found: " + id);
         repository.deleteById(id);
     }
 
@@ -70,12 +72,12 @@ public class StylistServiceImpl implements StylistService {
     }
 
     @Override
-public List<StylistResponse> findAllPaginated(int page, int pageSize) {
-    PageRequest pageReq = PageRequest.of(page, pageSize);
-    Page<Stylist> stylists = repository.findAll(pageReq);
-    return stylists.getContent().stream()
-            .map(StylistMapper::toResponse)
-            .toList();
-}
+    public List<StylistResponse> findAllPaginated(int page, int pageSize) {
+        PageRequest pageReq = PageRequest.of(page, pageSize);
+        Page<Stylist> stylists = repository.findAll(pageReq);
+        return stylists.getContent().stream()
+                .map(StylistMapper::toResponse)
+                .toList();
+    }
 
 }

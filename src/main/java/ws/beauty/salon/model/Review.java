@@ -1,7 +1,13 @@
 package ws.beauty.salon.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.ManyToOne;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,31 +19,25 @@ public class Review {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idReview")
-    @JsonProperty("idReview")
+    @Column(name = "id_review")
     private Integer id;
 
     // Relación con Client
     @ManyToOne
-    @JoinColumn(name = "client", referencedColumnName = "idClient", nullable = false)
-    @JsonProperty("client")
+    @JoinColumn(name = "id_client", referencedColumnName = "id_client", nullable = false)
     private Client client;
 
     // Relación con Service
     @ManyToOne
-    @JoinColumn(name = "service", referencedColumnName = "idService", nullable = false)
-    @JsonProperty("service")
-    private Service1 service;
+    @JoinColumn(name = "id_service", referencedColumnName = "id_service", nullable = false)
+    private Service service;
 
     @Column(name = "comment")
-    @JsonProperty("comment")
     private String comment;
 
     @Column(name = "rating")
-    @JsonProperty("rating")
     private Integer rating;
 
     @Column(name = "sentiment", length = 20)
-    @JsonProperty("sentiment")
     private String sentiment;
 }

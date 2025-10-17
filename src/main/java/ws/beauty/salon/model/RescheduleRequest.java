@@ -14,7 +14,6 @@ import lombok.Setter;
 
 import java.time.LocalDateTime;
 
-import ch.qos.logback.core.net.server.Client;
 @Getter
 @Setter
 @Entity
@@ -23,12 +22,11 @@ public class RescheduleRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_request")
-    private Long idRequest;
+    private Integer idRequest;
 
-    //@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "appointment_id", nullable = false)
-    //Crear clase de Appointment
-    //private Appointment appointment;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "id_appointment", nullable = false)
+    private Appointment appointment;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_client", nullable = false)
@@ -38,12 +36,12 @@ public class RescheduleRequest {
     private LocalDateTime requestedDate;
 
     @Column(name = "status", length = 20)
-    private String status = "pending";
+    private String status;
 
-    @Column(name = "reason", columnDefinition = "text")
+    @Column(name = "reason")
     private String reason;
 
     @Column(name = "created_at")
-    private LocalDateTime createdAt = LocalDateTime.now();
+    private LocalDateTime createdAt ;
 
 }

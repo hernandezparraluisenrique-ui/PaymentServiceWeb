@@ -33,16 +33,16 @@ public class RescheduleRequestService {
                     RescheduleRequestDTO dto = mapper.map(e, RescheduleRequestDTO.class);
                     //metodo que ocupa la clase Appointmen ...El ID
                     //dto.setAppointmentId(e.getAppointment() != null ? (Long) e.getAppointment().getAppointment() : null);
-                    dto.setIdClient(e.getClient() != null ? ((RescheduleRequestDTO) e.getClient()).getIdClient() : null);
+                    //dto.setIdClient(e.getClient() != null ? ((RescheduleRequestDTO) e.getClient()).getIdClient() : null);
                     return dto;
                 }).collect(Collectors.toList());
     }
 
-    public RescheduleRequestDTO getById(Long id) {
+    public RescheduleRequestDTO getById(Integer id) {
         RescheduleRequest e = repo.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
         RescheduleRequestDTO dto = mapper.map(e, RescheduleRequestDTO.class);
         //dto.setAppointmentId(e.getAppointment() != null ? e.getAppointment().getAppointment() : null);
-        dto.setIdClient(e.getClient() != null ? ((RescheduleRequestDTO) e.getClient()).getIdClient() : null);
+       // dto.setIdClient(e.getClient() != null ? ((RescheduleRequestDTO) e.getClient()).getIdClient() : null);
         return dto;
     }
 
@@ -63,14 +63,14 @@ public class RescheduleRequestService {
         return getById(ent.getIdRequest());
     }
 
-    public RescheduleRequestDTO updateStatus(Long id, String status) {
+    public RescheduleRequestDTO updateStatus(Integer id, String status) {
         RescheduleRequest e = repo.findById(id).orElseThrow(() -> new RuntimeException("Not found"));
         e.setStatus(status);
         repo.save(e);
         return getById(id);
     }
 
-    public void delete(Long id) {
+    public void delete(Integer id) {
         repo.deleteById(id);
     }
 }

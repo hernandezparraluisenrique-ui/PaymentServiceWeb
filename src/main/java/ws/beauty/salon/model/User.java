@@ -1,8 +1,16 @@
 package ws.beauty.salon.model;
 
-import jakarta.persistence.*;
+
 import lombok.Getter;
 import lombok.Setter;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.JoinColumn;
 
 @Getter
 @Setter
@@ -12,7 +20,7 @@ public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idUser")
+    @Column(name = "id_user")
     private Integer id;
 
     @Column(name = "userName", unique = true, nullable = false, length = 50)
@@ -25,10 +33,10 @@ public class User {
     private String role;
 
     @OneToOne
-    @JoinColumn(name = "client", referencedColumnName = "idClient")
+    @JoinColumn(name = "id_client", referencedColumnName = "id_client")
     private Client client;
 
     @OneToOne
-    @JoinColumn(name = "stylist", referencedColumnName = "idStylist")
+    @JoinColumn(name = "id_stylist", referencedColumnName = "id_stylist")
     private Stylist stylist;
 }

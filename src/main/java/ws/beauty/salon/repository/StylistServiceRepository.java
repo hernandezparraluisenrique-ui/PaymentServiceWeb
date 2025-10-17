@@ -9,7 +9,7 @@ import ws.beauty.salon.model.StylistService;
 
 public interface StylistServiceRepository extends JpaRepository<StylistService, StylistService> {
     //Busca Stylist por su Id
-    List<StylistService> findByStylist_IdStylist(Long stylistId);
+    List<StylistService> findByStylist_Id(Integer Id);
      //Busca el Service por su Id
-    List<StylistService> findByService_IdService(Long serviceId);
+    List<StylistService> findByService_Id(Integer Id);
 }

@@ -30,7 +30,6 @@ public class StylistController {
     @Autowired
     private ModelMapper modelMapper;
 
-    // ------------------- CRUD BÁSICO -------------------
 
     @Operation(summary = "Get all stylists")
     @ApiResponse(responseCode = "200", description = "Found stylists", content = {
@@ -91,7 +90,7 @@ public class StylistController {
         service.delete(id);
     }
 
-    // ------------------- CONSULTAS ESPECIALIZADAS -------------------
+    // CONSULTAS ESPECIALIZADAS
 
     @Operation(summary = "Get stylists by specialty")
     @ApiResponse(responseCode = "200", description = "Found stylists by specialty", content = {
@@ -111,7 +110,6 @@ public class StylistController {
         return service.getAvailableStylists();
     }
 
-    // ------------------- MÉTODOS DE APOYO -------------------
     public Stylist convertToEntity(StylistRequest request) {
         return modelMapper.map(request, Stylist.class);
     }

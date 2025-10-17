@@ -1,67 +1,58 @@
 package ws.beauty.salon.service;
 
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
+import java.time.LocalDateTime;
+import java.util.List;
+
+import ws.beauty.salon.dto.PaymentResponse;
+import ws.beauty.salon.dto.PaymentRequest;
 import jakarta.transaction.Transactional;
 
-import ws.beauty.salon.model.Payment;
-import ws.beauty.salon.model.Appointment;
-import ws.beauty.salon.repository.PaymentRepository;
-import ws.beauty.salon.repository.AppointmentRepository;
+import org.springframework.stereotype.Service;
 
-import java.util.List;
 
 @Service
 @Transactional
-public class PaymentService {
+public interface  PaymentService {
+     // 🔹 Obtener todos los pagos
+    List<PaymentResponse> findAll();
 
-    @Autowired
-    private PaymentRepository repository;
+    // 🔹 Obtener un pago por su ID
+    PaymentResponse findById(Integer idPayment);
 
-    @Autowired
-    private AppointmentRepository appointmentRepository;
+    // 🔹 Crear un nuevo pago
+    PaymentResponse create(PaymentRequest request);
 
-    @Autowired
-    private ModelMapper modelMapper;
+    // 🔹 Actualizar un pago existente
+    PaymentResponse update(Integer idPayment, PaymentRequest request);
 
-    public List<Payment> getAll() {
-        return repository.findAll();
-    }
+    // 🔹 Eliminar un pago por ID
+    void delete(Integer idPayment);
 
-    public Payment getById(Integer id) {
-        return repository.findById(id).orElse(null);
-    }
+    // 🔹 Buscar pago por ID de cita
+    PaymentResponse findByAppointmentId(Integer appointmentId);
 
-    public Payment save(Payment payment) {
-        return repository.save(payment);
-    }
+    // 🔹 Buscar pagos por cliente
+    List<PaymentResponse> findByClientId(Integer clientId);
 
-    public void delete(Integer id) {
-        repository.deleteById(id);
-    }
+    // 🔹 Buscar pagos por estilista
+    List<PaymentResponse> findByStylistId(Integer stylistId);
 
-    public boolean existsByAppointmentId(Integer appointmentId) {
-        return repository.existsByAppointmentId(appointmentId);
-    }
+    // 🔹 Buscar pagos en un rango de fechas
+    List<PaymentResponse> findByPaymentDateBetween(LocalDateTime start, LocalDateTime end);
 
-    public Payment convertToEntity(ws.beauty.salon.dto.PaymentRequestDTO dto) {
-        Payment payment = modelMapper.map(dto, Payment.class);
-        if(dto.getAppointmentId() != null) {
-            Appointment appointment = appointmentRepository.findById(dto.getAppointmentId()).orElse(null);
-            payment.setAppointment(appointment);
-        }
-        return payment;
-    }
+    // 🔹 Calcular total de pagos en un rango de fechas
+    Double getTotalAmountBetweenDates(LocalDateTime start, LocalDateTime end);
 
-    public ws.beauty.salon.dto.PaymentRequestDTO convertToDTO(Payment payment) {
-        ws.beauty.salon.dto.PaymentRequestDTO dto = modelMapper.map(payment, ws.beauty.salon.dto.PaymentRequestDTO.class);
-        if(payment.getAppointment() != null) {
-            dto.setAppointmentId(payment.getAppointment().getId());
-        }
-        return dto;
-    }
+    // 🔹 Calcular total de pagos por cliente
+    Double getTotalAmountByClient(Integer clientId);
+
+    // 🔹 Calcular total de pagos por estilista
+    Double getTotalAmountByStylist(Integer stylistId);
+
+    // 🔹 Verificar si existe un pago para una cita
+    boolean existsByAppointmentId(Integer appointmentId);
+
+    // 🔹 Obtener lista paginada de pagos
+    List<PaymentResponse> findAll(int page, int pageSize);
+    
 }
-
-
-

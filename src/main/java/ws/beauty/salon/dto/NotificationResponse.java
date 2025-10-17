@@ -10,7 +10,7 @@ import lombok.Setter;
 
 @Getter
 @Setter
-public class NotificationResponseDTO {
+public class NotificationResponse {
     
     @JsonProperty("id notification")
     private Integer id;
@@ -18,9 +18,9 @@ public class NotificationResponseDTO {
     @JsonProperty("message")
     private String message;
 
-    @JsonProperty("sent_via")
+    @JsonProperty("sent via")
     private String sentVia;
 
-    @JsonProperty("sent_at")
+    @JsonProperty("sent at")
     private LocalDateTime sentAt;
 }

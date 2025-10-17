@@ -1,46 +1,35 @@
 package ws.beauty.salon.service;
 
+
 import java.time.LocalDateTime;
 import java.util.List;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import jakarta.transaction.Transactional;
-import ws.beauty.salon.model.AttendanceLog;
-import ws.beauty.salon.repository.AttendanceLogRepository;
 
-@Service
-@Transactional
-public class AttendanceLogService {
+import ws.beauty.salon.dto.AttendanceLogRequest;
+import ws.beauty.salon.dto.AttendanceLogResponse;
 
-    @Autowired
-    private AttendanceLogRepository repository;
+public interface AttendanceLogService {
+    List<AttendanceLogResponse> findAll();
 
-    public List<AttendanceLog> getAll() {
-        return repository.findAll();
-    }
+    AttendanceLogResponse findById(Integer idAttendance);
 
-    public AttendanceLog save(AttendanceLog log) {
-        return repository.save(log);
-    }
+    AttendanceLogResponse create(AttendanceLogRequest request);
 
-    public List<AttendanceLog> getByStylistId(Integer stylistId) {
-        return repository.findByStylistId(stylistId);
-    }
+    AttendanceLogResponse update(Integer idAttendance, AttendanceLogRequest request);
 
-    public List<AttendanceLog> getByStylistIdAndDateRange(Integer stylistId, LocalDateTime start, LocalDateTime end) {
-        return repository.findByStylistIdAndDateRange(stylistId, start, end);
-    }
+    void delete(Integer idAttendance);
 
-    public List<AttendanceLog> getActiveAttendances() {
-        return repository.findActiveAttendances();
-    }
+    List<AttendanceLogResponse> findByStylistId(Integer stylistId);
 
-    public AttendanceLog getLastAttendanceByStylist(Integer stylistId) {
-        List<AttendanceLog> list = repository.findLastAttendanceByStylist(stylistId);
-        return list.isEmpty() ? null : list.get(0);
-    }
+    List<AttendanceLogResponse> findByCheckInBetween(LocalDateTime start, LocalDateTime end);
 
-    public void delete(Integer id) {
-        repository.deleteById(id);
-    }
+    boolean hasOpenAttendance(Integer stylistId);
+
+    AttendanceLogResponse closeAttendance(Integer stylistId);
+
+    List<AttendanceLogResponse> findAll(int page, int pageSize);
+
+    long countByStylistId(Integer stylistId);
+
+    long countByCheckInBetween(LocalDateTime start, LocalDateTime end);
+    
 }

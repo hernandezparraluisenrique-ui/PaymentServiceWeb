@@ -1,6 +1,7 @@
 package ws.beauty.salon.model;
 
 import java.time.LocalDateTime;
+import java.time.Duration;
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.FetchType;
@@ -17,8 +18,8 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "services")
-public class Service1 {
-    @Id
+public class Service {
+      @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_service")
     private Integer id;
@@ -29,16 +30,16 @@ public class Service1 {
     @Column(name = "description")
     private String description;
 
-    @Column(name = "price", nullable = false, precision = 10, scale = 2)
+    @Column(name = "price", nullable = false)
     private Double price;
 
     @Column(name = "estimated_duration")
-    private Integer estimatedDuration;
+    private Duration estimatedDuration;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "id_category")
     private ServiceCategory category;
 
-    @Column(name = "created_at" )
+    @Column(name = "created_at", updatable = false)
     private LocalDateTime createdAt;
 }

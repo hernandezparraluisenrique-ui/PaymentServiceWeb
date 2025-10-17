@@ -1,7 +1,11 @@
 package ws.beauty.salon.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Id;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Column;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -13,27 +17,21 @@ public class Stylist {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "idStylist")
-    @JsonProperty("idStylist")
+    @Column(name = "id_stylist")
     private Integer id;
 
-    @Column(name = "firstName", nullable = false, length = 50)
-    @JsonProperty("firstNname")
+    @Column(name = "first_name", nullable = false, length = 50)
     private String firstName;
 
-    @Column(name = "lastName", nullable = false, length = 50)
-    @JsonProperty("lastName")
+    @Column(name = "last_name", nullable = false, length = 50)
     private String lastName;
 
     @Column(name = "specialty", length = 100)
-    @JsonProperty("specialty")
     private String specialty;
 
-    @Column(name = "workSchedule", columnDefinition = "TEXT")
-    @JsonProperty("workSchedule")
+    @Column(name = "work_schedule")
     private String workSchedule;
 
     @Column(name = "available", nullable = false)
-    @JsonProperty("available")
     private Boolean available = true;
 }

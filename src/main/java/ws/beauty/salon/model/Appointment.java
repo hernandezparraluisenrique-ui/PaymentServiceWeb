@@ -24,7 +24,7 @@ public class Appointment {
 
     @Column(name = "status", length = 20)
     @JsonProperty("status")
-    private String status = "pending"; // valores posibles: pending, completed, canceled
+    private String status ;
 
     @ManyToOne
     @JoinColumn(name = "id_client", referencedColumnName = "id_client")
@@ -39,5 +39,5 @@ public class Appointment {
     @ManyToOne
     @JoinColumn(name = "id_service", referencedColumnName = "id_service")
     @JsonProperty("service")
-    private Service1 service;
+    private Service service;
 }

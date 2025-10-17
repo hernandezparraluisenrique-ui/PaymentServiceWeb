@@ -30,7 +30,7 @@ public class PriceHistoryService {
             .collect(Collectors.toList());
     }
 
-    public PriceHistoryDTO getById(Long id) {
+    public PriceHistoryDTO getById(Integer id) {
         PriceHistory e = repo.findById(id)
             .orElseThrow(() -> new RuntimeException("Price history not found"));
         PriceHistoryDTO dto = mapper.map(e, PriceHistoryDTO.class);
@@ -57,9 +57,5 @@ public class PriceHistoryService {
         
         repo.save(ent);
         return getById(ent.getIdPrice());
-    }
-
-    public void delete(Long id) {
-        repo.deleteById(id);
     }
 }

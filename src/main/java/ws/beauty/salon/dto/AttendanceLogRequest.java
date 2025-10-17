@@ -4,25 +4,19 @@ import java.time.LocalDateTime;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 
-import lombok.Getter;
-import lombok.Setter;
+import jakarta.validation.constraints.NotBlank;
+import lombok.Data;
 
-
-@Getter
-@Setter
-public class AttendanceLogResponse {
-    @JsonProperty("id attendance")
-    private Integer id;
-
+@Data
+public class AttendanceLogRequest {
+    @NotBlank(message = "El ID del estilista es requerido")
     @JsonProperty("id stylist")
     private Integer stylistId;
-
-    @JsonProperty("stylist name")
-    private String stylistName;
 
     @JsonProperty("check in")
     private LocalDateTime checkIn;
 
     @JsonProperty("check out")
     private LocalDateTime checkOut;
+    
 }

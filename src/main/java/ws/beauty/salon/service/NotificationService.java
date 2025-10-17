@@ -3,40 +3,42 @@ package ws.beauty.salon.service;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import ws.beauty.salon.dto.NotificationRequest;
+import ws.beauty.salon.dto.NotificationResponse;
 
-import ws.beauty.salon.dto.NotificationRequestDTO;
-import ws.beauty.salon.model.Notification;
-import ws.beauty.salon.repository.NotificationRepository;
 
-@Service
-@Transactional
-public class NotificationService {
 
-    @Autowired
-    private NotificationRepository repository;
+public interface NotificationService {
+    
+    // 🔹 Obtener todas las notificaciones
+    List<NotificationResponse> findAll();
 
-    @Autowired
-    private ModelMapper modelMapper;
+    // 🔹 Obtener todas las notificaciones con paginación
+    List<NotificationResponse> findAll(int page, int pageSize);
 
-    public List<Notification> getAllNotifications() {
-        return repository.findAll();
-    }
+    // 🔹 Buscar por ID
+    NotificationResponse findById(Integer idNotification);
 
-    public Notification getNotificationById(Integer id) {
-        return repository.findById(id).orElseThrow();
-    }
+    // 🔹 Crear nueva notificación
+    NotificationResponse create(NotificationRequest request);
 
-    public Notification createNotification(NotificationRequestDTO dto) {
-        Notification notification = modelMapper.map(dto, Notification.class);
-        if (notification.getSentAt() == null) {
-            notification.setSentAt(LocalDateTime.now());
-        }
-        return repository.save(notification);
-    }
+    // 🔹 Actualizar notificación existente
+    NotificationResponse update(Integer idNotification, NotificationRequest request);
 
-    // Otros métodos según necesidad (buscar por cliente, rango de fechas, contadores, recientes)
+    // 🔹 Eliminar notificación
+    void delete(Integer idNotification);
+
+    // 🔹 Buscar por cliente
+    List<NotificationResponse> findByClientId(Integer clientId);
+
+    // 🔹 Buscar por tipo de envío
+    List<NotificationResponse> findBySentVia(String sentVia);
+
+    // 🔹 Buscar en rango de fechas
+    List<NotificationResponse> findBySentAtBetween(LocalDateTime start, LocalDateTime end);
+
+    // 🔹 Contar notificaciones por cliente
+    long countByClientId(Integer clientId);
+
+  
 }

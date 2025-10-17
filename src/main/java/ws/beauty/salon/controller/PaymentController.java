@@ -1,86 +1,151 @@
 package ws.beauty.salon.controller;
 
+import java.net.URI;
+import java.time.LocalDateTime;
 import java.util.List;
-
-//import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.RequestBody;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
-import io.swagger.v3.oas.annotations.responses.ApiResponses;
-import io.swagger.v3.oas.annotations.tags.Tag;
-
-import ws.beauty.salon.dto.PaymentRequestDTO;
-import ws.beauty.salon.model.Payment;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import ws.beauty.salon.dto.PaymentRequest;
+import ws.beauty.salon.dto.PaymentResponse;
 import ws.beauty.salon.service.PaymentService;
 
+
 @RestController
-@RequestMapping("payments")
-@CrossOrigin(origins = "*", methods = { RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE })
-@Tag(name = "Payments", description = "Provides methods for managing payments")
+@RequestMapping("/api/v3/payments")
+@RequiredArgsConstructor
 public class PaymentController {
 
-    @Autowired
-    private PaymentService service;
+private final PaymentService service;
 
-    /*@Autowired
-    private ModelMapper modelMapper;*/
-
-    @Operation(summary = "Get all payments")
-    @ApiResponse(responseCode = "200", description = "Found payments", content = {
-            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = Payment.class))) })
+    // 🔹 Obtener todos los pagos
     @GetMapping
-    public List<Payment> getAll() {
-        return service.getAll();
+    @Operation(summary = "Get all payments")
+    @ApiResponse(responseCode = "200", description = "List of registered payments.", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PaymentResponse.class))) })
+    public List<PaymentResponse> findAll() {
+        return service.findAll();
     }
 
-    @Operation(summary = "Get a payment by its id")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Payment found", content = {
-                    @Content(mediaType = "application/json", schema = @Schema(implementation = Payment.class)) }),
-            @ApiResponse(responseCode = "404", description = "Payment not found", content = @Content) })
-    @GetMapping("{id}")
-    public ResponseEntity<Payment> getById(@PathVariable Integer id) {
-        Payment payment = service.getById(id);
-        if (payment == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
+    // 🔹 Obtener todos los pagos con paginación
+    @GetMapping(value = "/pagination", params = { "page", "pageSize" })
+    @Operation(summary = "Get all payments with pagination")
+    public List<PaymentResponse> findAll(
+            @RequestParam(value = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize) {
+        if (page < 0 || pageSize < 0 || (page == 0 && pageSize == 0)) {
+            throw new IllegalArgumentException(
+                    "Invalid pagination parameters: page and pageSize cannot be negative and cannot both be 0.");
         }
-        return new ResponseEntity<>(payment, HttpStatus.OK);
+        return service.findAll(page, pageSize);
     }
 
-    @Operation(summary = "Register a payment")
-    @ApiResponse(responseCode = "201", description = "Registered payment", content = {
-            @Content(mediaType = "application/json", schema = @Schema(implementation = PaymentRequestDTO.class)) })
+    // 🔹 Obtener un pago por su ID
+    @GetMapping("/{idPayment}")
+    @Operation(summary = "Get payment by ID")
+    public PaymentResponse findById(@PathVariable Integer idPayment) {
+        return service.findById(idPayment);
+    }
+
+    // 🔹 Crear un nuevo pago
     @PostMapping
-    public ResponseEntity<PaymentRequestDTO> add(@RequestBody PaymentRequestDTO paymentDTO) {
-        Payment payment = service.convertToEntity(paymentDTO);
-        Payment savedPayment = service.save(payment);
-        PaymentRequestDTO savedDTO = service.convertToDTO(savedPayment);
-        return new ResponseEntity<>(savedDTO, HttpStatus.CREATED);
+    @Operation(summary = "Create new payment")
+    public ResponseEntity<PaymentResponse> create(@Valid @RequestBody PaymentRequest req) {
+        PaymentResponse created = service.create(req);
+        return ResponseEntity
+                .created(URI.create("/api/v1/payments/" + created.getId()))
+                .body(created);
     }
 
-    @Operation(summary = "Delete a payment by its id")
-    @DeleteMapping("{id}")
-    public ResponseEntity<Void> delete(@PathVariable Integer id) {
-        if (service.getById(id) == null) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
-        service.delete(id);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    // 🔹 Actualizar un pago
+    @PutMapping("/{idPayment}")
+    @Operation(summary = "Update existing payment")
+    public PaymentResponse update(@PathVariable Integer idPayment, @Valid @RequestBody PaymentRequest req) {
+        return service.update(idPayment, req);
     }
 
-    /*private PaymentRequestDTO convertToDTO(Payment payment) {
-        return modelMapper.map(payment, PaymentRequestDTO.class);
+    // 🔹 Eliminar un pago
+    @DeleteMapping("/{idPayment}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @Operation(summary = "Delete payment by ID")
+    public void delete(@PathVariable Integer idPayment) {
+        service.delete(idPayment);
     }
 
-    private Payment convertToEntity(PaymentRequestDTO dto) {
-        return modelMapper.map(dto, Payment.class);
-    }*/
+    // 🔹 Buscar pago por ID de cita
+    @GetMapping("/appointment/{appointmentId}")
+    @Operation(summary = "Get payment by appointment ID")
+    public PaymentResponse findByAppointmentId(@PathVariable Integer appointmentId) {
+        return service.findByAppointmentId(appointmentId);
+    }
+
+    // 🔹 Buscar pagos por cliente
+    @GetMapping("/client/{clientId}")
+    @Operation(summary = "Get payments by client ID")
+    public List<PaymentResponse> findByClientId(@PathVariable Integer clientId) {
+        return service.findByClientId(clientId);
+    }
+
+    // 🔹 Buscar pagos por estilista
+    @GetMapping("/stylist/{stylistId}")
+    @Operation(summary = "Get payments by stylist ID")
+    public List<PaymentResponse> findByStylistId(@PathVariable Integer stylistId) {
+        return service.findByStylistId(stylistId);
+    }
+
+    // 🔹 Buscar pagos en un rango de fechas
+    @GetMapping("/dates")
+    @Operation(summary = "Get payments between two dates")
+    public List<PaymentResponse> findByPaymentDateBetween(
+            @RequestParam LocalDateTime start,
+            @RequestParam LocalDateTime end) {
+        return service.findByPaymentDateBetween(start, end);
+    }
+
+    // 🔹 Calcular total de pagos por rango de fechas
+    @GetMapping("/total/dates")
+    @Operation(summary = "Get total payment amount between two dates")
+    public Double getTotalAmountBetweenDates(
+            @RequestParam LocalDateTime start,
+            @RequestParam LocalDateTime end) {
+        return service.getTotalAmountBetweenDates(start, end);
+    }
+
+    // 🔹 Calcular total por cliente
+    @GetMapping("/total/client/{clientId}")
+    @Operation(summary = "Get total payment amount by client ID")
+    public Double getTotalAmountByClient(@PathVariable Integer clientId) {
+        return service.getTotalAmountByClient(clientId);
+    }
+
+    // 🔹 Calcular total por estilista
+    @GetMapping("/total/stylist/{stylistId}")
+    @Operation(summary = "Get total payment amount by stylist ID")
+    public Double getTotalAmountByStylist(@PathVariable Integer stylistId) {
+        return service.getTotalAmountByStylist(stylistId);
+    }
+
+    // 🔹 Verificar si existe un pago para una cita
+    @GetMapping("/exists/{appointmentId}")
+    @Operation(summary = "Check if a payment exists for an appointment ID")
+    public boolean existsByAppointmentId(@PathVariable Integer appointmentId) {
+        return service.existsByAppointmentId(appointmentId);
+    }
+
 }
-

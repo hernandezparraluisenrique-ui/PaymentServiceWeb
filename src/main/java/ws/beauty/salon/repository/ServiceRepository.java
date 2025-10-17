@@ -1,8 +1,8 @@
 package ws.beauty.salon.repository;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import ws.beauty.salon.model.Service1;
+import ws.beauty.salon.model.Service;
 
-public interface ServiceRepository extends JpaRepository<Service1, Integer> {
+public interface ServiceRepository extends JpaRepository<Service, Integer> {
     
 }

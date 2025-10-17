@@ -1,34 +1,45 @@
 package ws.beauty.salon.model;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import jakarta.persistence.*;
-import lombok.Getter;
-import lombok.Setter;
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.ForeignKey;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.JoinColumn;
+import jakarta.persistence.OneToOne;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
+
+@Data
 @Getter
 @Setter
 @Entity
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
 @Table(name = "payments")
 public class Payment {
-
-    @Id
+  @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id_payment")
-    @JsonProperty("idPayment")
     private Integer id;
 
-    @Column(name = "amount")
-    @JsonProperty("amount")
-    private Double amount;
+    @Column(name = "amount", nullable = false)
+    private BigDecimal amount;
 
-    @Column(name = "payment_date")
-    @JsonProperty("paymentDate")
+    @Column(name = "payment_date", nullable = false)
     private LocalDateTime paymentDate;
 
     @OneToOne
-    @JoinColumn(name = "appointment_id", referencedColumnName = "id_appointment")
-    @JsonProperty("appointment")
+    @JoinColumn(name = "id_appointment", unique = true)
     private Appointment appointment;
 }
-
