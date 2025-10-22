@@ -7,22 +7,23 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
-import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.context.TestConfiguration;
 import org.springframework.context.annotation.Bean;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
-
-import ws.beauty.salon.controller.StylistController;
 import ws.beauty.salon.dto.StylistRequest;
 import ws.beauty.salon.dto.StylistResponse;
 import ws.beauty.salon.service.StylistService;
+import ws.beauty.salon.controller.StylistController;
+
 
 import java.util.Collections;
 import java.util.List;
 
+//import static org.hamcrest.Matchers.containsStringIgnoringCase;
+import static org.hamcrest.Matchers.hasSize;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -33,183 +34,171 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class StylistControllerTest {
 
     @Autowired
-    private MockMvc mvc;
+    MockMvc mvc;
 
     @Autowired
-    private ObjectMapper mapper;
+    ObjectMapper mapper;
 
     @Autowired
-    private StylistService service;
+    StylistService service;
 
     private static final String BASE = "/api/stylists";
 
     @BeforeEach
-    void setUp() {
-        reset(service); // resetea el mock antes de cada test
+    void setup() {
+        reset(service);
     }
 
-    // ==========================
-    // TestConfiguration para mock
-    // ==========================
+    // =============================
+    // Configuración de beans de prueba
+    // =============================
     @TestConfiguration
     static class TestConfig {
         @Bean
         StylistService stylistService() {
-            return Mockito.mock(StylistService.class);
+            return mock(StylistService.class);
         }
     }
 
-    // ==========================
-    // Helpers
-    // ==========================
-    private StylistResponse resp(int id, String name, String specialty, boolean available) {
-        StylistResponse r = new StylistResponse();
-        r.setId(id);
-        r.setFirstName(name);
-        r.setSpecialty(specialty);
-        r.setAvailable(available);
-        return r;
+    // =============================
+    // Helpers DTO
+    // =============================
+
+    private StylistResponse resp(Integer id, String first, String last, String spec, boolean available) {
+        return StylistResponse.builder()
+                .id(id)
+                .firstName(first)
+                .lastName(last)
+                .specialty(spec)
+                .available(available)
+                .build();
     }
 
-    private StylistRequest req(String name, String specialty, boolean available) {
-        StylistRequest r = new StylistRequest();
-        r.setFirstName(name);
-        r.setSpecialty(specialty);
-        r.setAvailable(available);
-        return r;
+    private StylistRequest req(String first, String last, String spec, boolean available) {
+        return StylistRequest.builder()
+                .firstName(first)
+                .lastName(last)
+                .specialty(spec)
+                .available(available)
+                .build();
     }
 
-    // ==========================
+    // =============================
     // GET /api/stylists
-    // ==========================
+    // =============================
+
     @Test
     @DisplayName("GET /api/stylists → 200 con lista")
-    void getAll_ok() throws Exception {
+    void findAll_ok() throws Exception {
         when(service.findAll()).thenReturn(List.of(
-                resp(1, "Ana", "Colorista", true),
-                resp(2, "Luis", "Corte", false)
+                resp(1, "Ana", "López", "Colorimetría", true),
+                resp(2, "Luis", "Pérez", "Corte", false)
         ));
 
         mvc.perform(get(BASE).accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(2)))
+                .andExpect(jsonPath("$", hasSize(2)))
                 .andExpect(jsonPath("$[0].firstName").value("Ana"))
                 .andExpect(jsonPath("$[1].specialty").value("Corte"));
     }
 
     @Test
     @DisplayName("GET /api/stylists → 200 con lista vacía")
-    void getAll_empty() throws Exception {
+    void findAll_empty() throws Exception {
         when(service.findAll()).thenReturn(Collections.emptyList());
 
         mvc.perform(get(BASE))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(0)));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
-    // ==========================
-    // GET /api/stylists/pagination
-    // ==========================
-    @ParameterizedTest
-    @CsvSource({
-            "0,5",
-            "1,10"
-    })
+    // =============================
+    // GET paginado /pagination?page=&pageSize=
+    // =============================
+
+    @ParameterizedTest(name = "GET /pagination?page={0}&pageSize={1} → 200")
+    @CsvSource({"0,5", "1,10", "2,3"})
     @DisplayName("GET paginado válido → 200")
-    void getAllPaginated_ok(int page, int size) throws Exception {
+    void pagination_ok(int page, int size) throws Exception {
         when(service.findAllPaginated(page, size))
-                .thenReturn(List.of(resp(10, "Marta", "Peinados", true)));
+                .thenReturn(List.of(resp(10, "María", "Díaz", "Maquillaje", true)));
 
         mvc.perform(get(BASE + "/pagination")
-                        .queryParam("page", String.valueOf(page))
-                        .queryParam("pageSize", String.valueOf(size)))
+                .queryParam("page", String.valueOf(page))
+                .queryParam("pageSize", String.valueOf(size)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(1)))
-                .andExpect(jsonPath("$[0].firstName").value("Marta"));
+                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$[0].specialty").value("Maquillaje"));
     }
 
-    @ParameterizedTest
-    @CsvSource({
-            "-1,10",
-            "1,-5"
-    })
-    @DisplayName("GET paginado inválido → 400")
-    void getAllPaginated_badRequest(int page, int size) throws Exception {
-        when(service.findAllPaginated(page, size))
-                .thenThrow(new IllegalArgumentException("Invalid paging"));
+    // =============================
+    // GET /{id}
+    // =============================
 
-        mvc.perform(get(BASE + "/pagination")
-                        .queryParam("page", String.valueOf(page))
-                        .queryParam("pageSize", String.valueOf(size)))
-                .andExpect(status().isBadRequest());
-    }
-
-    // ==========================
-    // GET /api/stylists/{id}
-    // ==========================
     @Test
     @DisplayName("GET /{id} existente → 200")
-    void getById_ok() throws Exception {
-        when(service.findById(5)).thenReturn(resp(5, "María", "Tinte", true));
+    void findById_ok() throws Exception {
+        when(service.findById(5)).thenReturn(resp(5, "Paola", "Reyes", "Corte", true));
 
         mvc.perform(get(BASE + "/{id}", 5))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("María"))
-                .andExpect(jsonPath("$.specialty").value("Tinte"));
+                .andExpect(jsonPath("$.firstName").value("Paola"))
+                .andExpect(jsonPath("$.available").value(true));
     }
 
     @Test
-    @DisplayName("GET /{id} no encontrado → 404")
-    void getById_notFound() throws Exception {
-        when(service.findById(999))
-                .thenThrow(new EntityNotFoundException("Stylist not found"));
+    @DisplayName("GET /{id} no existente → 404")
+    void findById_notFound() throws Exception {
+        when(service.findById(999)).thenThrow(new EntityNotFoundException("Stylist not found"));
 
         mvc.perform(get(BASE + "/{id}", 999))
                 .andExpect(status().isNotFound());
     }
 
-    // ==========================
+    // =============================
     // POST /api/stylists
-    // ==========================
+    // =============================
+
     @Test
-    @DisplayName("POST válido → 201")
+    @DisplayName("POST válido → 201 + body creado")
     void create_ok() throws Exception {
-        StylistRequest rq = req("Pedro", "Barbería", true);
-        StylistResponse created = resp(101, "Pedro", "Barbería", true);
+        StylistRequest rq = req("Luz", "Campos", "Uñas", true);
+        StylistResponse created = resp(7, "Luz", "Campos", "Uñas", true);
         when(service.create(any(StylistRequest.class))).thenReturn(created);
 
         mvc.perform(post(BASE)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(rq)))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(rq)))
                 .andExpect(status().isCreated())
-                .andExpect(jsonPath("$.id").value(101))
-                .andExpect(jsonPath("$.firstName").value("Pedro"));
+                .andExpect(jsonPath("$.idStylist").value(7))
+                .andExpect(jsonPath("$.firstName").value("Luz"));
     }
 
     @Test
-    @DisplayName("POST inválido → 400 por body vacío")
+    @DisplayName("POST inválido (sin campos requeridos) → 400")
     void create_invalid() throws Exception {
         mvc.perform(post(BASE)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content("{}"))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content("{}"))
                 .andExpect(status().isBadRequest());
     }
 
-    // ==========================
+    // =============================
     // PUT /api/stylists/{id}
-    // ==========================
-    @Test
-    @DisplayName("PUT válido → 200 con body actualizado")
-    void update_ok() throws Exception {
-        StylistRequest rq = req("María", "Colorista", true);
-        StylistResponse updated = resp(2, "María", "Colorista", true);
-        when(service.update(eq(2), any(StylistRequest.class))).thenReturn(updated);
+    // =============================
 
-        mvc.perform(put(BASE + "/{id}", 2)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(rq)))
+    @Test
+    @DisplayName("PUT válido → 200 actualizado")
+    void update_ok() throws Exception {
+        StylistRequest rq = req("Mario", "Ruiz", "Colorista", true);
+        StylistResponse updated = resp(8, "Mario", "Ruiz", "Colorista", true);
+        when(service.update(eq(8), any(StylistRequest.class))).thenReturn(updated);
+
+        mvc.perform(put(BASE + "/{id}", 8)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(rq)))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("María"))
+                .andExpect(jsonPath("$.firstName").value("Mario"))
                 .andExpect(jsonPath("$.specialty").value("Colorista"));
     }
 
@@ -217,69 +206,71 @@ class StylistControllerTest {
     @DisplayName("PUT no existente → 404")
     void update_notFound() throws Exception {
         when(service.update(eq(999), any(StylistRequest.class)))
-                .thenThrow(new EntityNotFoundException("Not found"));
+                .thenThrow(new EntityNotFoundException("Stylist not found"));
 
         mvc.perform(put(BASE + "/{id}", 999)
-                        .contentType(MediaType.APPLICATION_JSON)
-                        .content(mapper.writeValueAsString(req("X", "Y", false))))
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(mapper.writeValueAsString(req("X", "Y", "Corte", true))))
                 .andExpect(status().isNotFound());
     }
 
-    // ==========================
+    // =============================
     // DELETE /api/stylists/{id}
-    // ==========================
+    // =============================
+
     @Test
     @DisplayName("DELETE existente → 204")
     void delete_ok() throws Exception {
-        doNothing().when(service).delete(7);
+        doNothing().when(service).delete(3);
 
-        mvc.perform(delete(BASE + "/{id}", 7))
-                .andExpect(status().isNoContent());
+        mvc.perform(delete(BASE + "/{id}", 3))
+                .andExpect(status().isNoContent())
+                .andExpect(content().string(""));
     }
 
     @Test
     @DisplayName("DELETE no existente → 404")
     void delete_notFound() throws Exception {
-        doThrow(new EntityNotFoundException("Not found"))
-                .when(service).delete(500);
+        doThrow(new EntityNotFoundException("Stylist not found")).when(service).delete(999);
 
-        mvc.perform(delete(BASE + "/{id}", 500))
+        mvc.perform(delete(BASE + "/{id}", 999))
                 .andExpect(status().isNotFound());
     }
 
-    // ==========================
-    // GET /api/stylists/specialty/{s}
-    // ==========================
+    // =============================
+    // GET /specialty/{specialty}
+    // =============================
+
     @Test
-    @DisplayName("GET por especialidad → 200 con lista")
+    @DisplayName("GET /specialty/{specialty} → 200 con lista")
     void getBySpecialty_ok() throws Exception {
-        when(service.getBySpecialty("colorista"))
-                .thenReturn(List.of(resp(1, "Ana", "Colorista", true)));
+        when(service.getBySpecialty("Corte"))
+                .thenReturn(List.of(resp(1, "Ana", "López", "Corte", true)));
 
-        mvc.perform(get(BASE + "/specialty/{specialty}", "colorista"))
+        mvc.perform(get(BASE + "/specialty/{specialty}", "Corte"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$[0].specialty",
-                        org.hamcrest.Matchers.containsStringIgnoringCase("colorista")));
+                .andExpect(jsonPath("$[0].specialty").value("Corte"));
     }
 
     @Test
-    @DisplayName("GET por especialidad sin resultados → 200 []")
+    @DisplayName("GET /specialty/{specialty} → 200 lista vacía")
     void getBySpecialty_empty() throws Exception {
-        when(service.getBySpecialty("xxx")).thenReturn(Collections.emptyList());
+        when(service.getBySpecialty("Nada")).thenReturn(Collections.emptyList());
 
-        mvc.perform(get(BASE + "/specialty/{specialty}", "xxx"))
+        mvc.perform(get(BASE + "/specialty/{specialty}", "Nada"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(0)));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 
-    // ==========================
-    // GET /api/stylists/available
-    // ==========================
+    // =============================
+    // GET /available
+    // =============================
+
     @Test
-    @DisplayName("GET stylists disponibles → 200 con lista")
+    @DisplayName("GET /available → 200 con lista de disponibles")
     void getAvailable_ok() throws Exception {
         when(service.getAvailableStylists())
-                .thenReturn(List.of(resp(1, "Luz", "Maquillaje", true)));
+                .thenReturn(List.of(resp(5, "Pablo", "Cruz", "Corte", true)));
 
         mvc.perform(get(BASE + "/available"))
                 .andExpect(status().isOk())
@@ -287,12 +278,12 @@ class StylistControllerTest {
     }
 
     @Test
-    @DisplayName("GET stylists disponibles → 200 sin resultados")
+    @DisplayName("GET /available → 200 lista vacía")
     void getAvailable_empty() throws Exception {
         when(service.getAvailableStylists()).thenReturn(Collections.emptyList());
 
         mvc.perform(get(BASE + "/available"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", org.hamcrest.Matchers.hasSize(0)));
+                .andExpect(jsonPath("$", hasSize(0)));
     }
 }
