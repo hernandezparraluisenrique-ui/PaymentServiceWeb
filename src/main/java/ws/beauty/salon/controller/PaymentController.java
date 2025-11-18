@@ -3,15 +3,16 @@ package ws.beauty.salon.controller;
 import java.net.URI;
 import java.time.LocalDateTime;
 import java.util.List;
+
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestBody;
+
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.ArraySchema;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -25,24 +26,19 @@ import ws.beauty.salon.service.PaymentService;
 
 
 @RestController
-@RequestMapping("/payments")
+@RequestMapping("/api/v1/payments")
 @RequiredArgsConstructor
+
 public class PaymentController {
 
 private final PaymentService service;
 
-    // 🔹 Obtener todos los pagos
-    @GetMapping
-    @Operation(summary = "Get all payments")
-    @ApiResponse(responseCode = "200", description = "List of registered payments.", content = {
-            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PaymentResponse.class))) })
-    public List<PaymentResponse> findAll() {
-        return service.findAll();
-    }
 
     // 🔹 Obtener todos los pagos con paginación
-    @GetMapping(value = "/pagination", params = { "page", "pageSize" })
+    @GetMapping(params = { "page", "pageSize" })
     @Operation(summary = "Get all payments with pagination")
+    @ApiResponse(responseCode = "200", description = "Paginated list of payments.", content = {
+            @Content(mediaType = "application/json", array = @ArraySchema(schema = @Schema(implementation = PaymentResponse.class))) })
     public List<PaymentResponse> findAll(
             @RequestParam(value = "page", defaultValue = "0", required = false) int page,
             @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize) {
@@ -70,12 +66,7 @@ private final PaymentService service;
                 .body(created);
     }
 
-    // 🔹 Actualizar un pago
-    @PutMapping("/{idPayment}")
-    @Operation(summary = "Update existing payment")
-    public PaymentResponse update(@PathVariable Integer idPayment, @Valid @RequestBody PaymentRequest req) {
-        return service.update(idPayment, req);
-    }
+   
 
     // 🔹 Buscar pago por ID de cita
     @GetMapping("/appointment/{appointmentId}")
@@ -84,27 +75,47 @@ private final PaymentService service;
         return service.findByAppointmentId(appointmentId);
     }
 
-    // 🔹 Buscar pagos por cliente
-    @GetMapping("/client/{clientId}")
-    @Operation(summary = "Get payments by client ID")
-    public List<PaymentResponse> findByClientId(@PathVariable Integer clientId) {
-        return service.findByClientId(clientId);
+    // 🔹 Buscar pagos por cliente con paginación
+    @GetMapping(value = "/client/{clientId}", params = {"page", "pageSize"})
+    @Operation(summary = "Get payments by client ID with pagination")
+    public List<PaymentResponse> findByClientId(
+            @PathVariable Integer clientId,
+            @RequestParam(value = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize) {
+        if (page < 0 || pageSize < 0 || (page == 0 && pageSize == 0)) {
+            throw new IllegalArgumentException(
+                    "Invalid pagination parameters: page and pageSize cannot be negative and cannot both be 0.");
+        }
+        return service.findByClientId(clientId, page, pageSize);
     }
 
-    // 🔹 Buscar pagos por estilista
-    @GetMapping("/stylist/{stylistId}")
-    @Operation(summary = "Get payments by stylist ID")
-    public List<PaymentResponse> findByStylistId(@PathVariable Integer stylistId) {
-        return service.findByStylistId(stylistId);
+    // 🔹 Buscar pagos por estilista con paginación
+    @GetMapping(value = "/stylist/{stylistId}", params = {"page", "pageSize"})
+    @Operation(summary = "Get payments by stylist ID with pagination")
+    public List<PaymentResponse> findByStylistId(
+            @PathVariable Integer stylistId,
+            @RequestParam(value = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize) {
+        if (page < 0 || pageSize < 0 || (page == 0 && pageSize == 0)) {
+            throw new IllegalArgumentException(
+                    "Invalid pagination parameters: page and pageSize cannot be negative and cannot both be 0.");
+        }
+        return service.findByStylistId(stylistId, page, pageSize);
     }
 
-    // 🔹 Buscar pagos en un rango de fechas
-    @GetMapping("/dates")
-    @Operation(summary = "Get payments between two dates")
+    // 🔹 Buscar pagos en un rango de fechas con paginación
+    @GetMapping(value = "/dates", params = {"start", "end", "page", "pageSize"})
+    @Operation(summary = "Get payments between two dates with pagination")
     public List<PaymentResponse> findByPaymentDateBetween(
             @RequestParam LocalDateTime start,
-            @RequestParam LocalDateTime end) {
-        return service.findByPaymentDateBetween(start, end);
+            @RequestParam LocalDateTime end,
+            @RequestParam(value = "page", defaultValue = "0", required = false) int page,
+            @RequestParam(value = "pageSize", defaultValue = "10", required = false) int pageSize) {
+        if (page < 0 || pageSize < 0 || (page == 0 && pageSize == 0)) {
+            throw new IllegalArgumentException(
+                    "Invalid pagination parameters: page and pageSize cannot be negative and cannot both be 0.");
+        }
+        return service.findByPaymentDateBetween(start, end, page, pageSize);
     }
 
     // 🔹 Calcular total de pagos por rango de fechas
@@ -136,5 +147,4 @@ private final PaymentService service;
     public boolean existsByAppointmentId(@PathVariable Integer appointmentId) {
         return service.existsByAppointmentId(appointmentId);
     }
-
 }

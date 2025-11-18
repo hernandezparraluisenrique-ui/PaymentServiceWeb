@@ -10,8 +10,6 @@ import ws.beauty.salon.dto.NotificationResponse;
 
 public interface NotificationService {
     
-    // 🔹 Obtener todas las notificaciones
-    List<NotificationResponse> findAll();
 
     // 🔹 Obtener todas las notificaciones con paginación
     List<NotificationResponse> findAll(int page, int pageSize);
@@ -25,8 +23,6 @@ public interface NotificationService {
     // 🔹 Actualizar notificación existente
     NotificationResponse update(Integer idNotification, NotificationRequest request);
 
-    // 🔹 Eliminar notificación
-    void delete(Integer idNotification);
 
     // 🔹 Buscar por cliente
     List<NotificationResponse> findByClientId(Integer clientId);

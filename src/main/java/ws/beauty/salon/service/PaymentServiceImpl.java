@@ -27,14 +27,6 @@ public class PaymentServiceImpl implements PaymentService {
     private final PaymentRepository paymentRepository;
     private final AppointmentRepository appointmentRepository;
 
-    // 🔹 Obtener todos los pagos
-    @Override
-    public List<PaymentResponse> findAll() {
-        return paymentRepository.findAll().stream()
-                .map(PaymentMapper::toResponse)
-                .toList();
-    }
-
     // 🔹 Obtener todos los pagos con paginación
     @Override
     public List<PaymentResponse> findAll(int page, int pageSize) {
@@ -64,21 +56,7 @@ public class PaymentServiceImpl implements PaymentService {
         return PaymentMapper.toResponse(saved);
     }
 
-    // 🔹 Actualizar un pago existente
-    @Override
-    public PaymentResponse update(Integer idPayment, PaymentRequest request) {
-        Payment existing = paymentRepository.findById(idPayment)
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found: " + idPayment));
-
-        Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
-                .orElseThrow(() -> new EntityNotFoundException("Appointment not found: " + request.getAppointmentId()));
-
-        PaymentMapper.copyToEntity(request, existing, appointment);
-        Payment saved = paymentRepository.save(existing);
-        return PaymentMapper.toResponse(saved);
-    }
-
-
+   
     // 🔹 Buscar pago por ID de cita
     @Override
     public PaymentResponse findByAppointmentId(Integer appointmentId) {
@@ -87,26 +65,32 @@ public class PaymentServiceImpl implements PaymentService {
         return PaymentMapper.toResponse(payment);
     }
 
-    // 🔹 Buscar pagos por cliente
+    // 🔹 Buscar pagos por cliente con paginación
     @Override
-    public List<PaymentResponse> findByClientId(Integer clientId) {
-        return paymentRepository.findByClientId(clientId).stream()
+    public List<PaymentResponse> findByClientId(Integer clientId, int page, int pageSize) {
+        PageRequest pageReq = PageRequest.of(page, pageSize);
+        Page<Payment> payments = paymentRepository.findByClientId(clientId, pageReq);
+        return payments.getContent().stream()
                 .map(PaymentMapper::toResponse)
                 .toList();
     }
 
-    // 🔹 Buscar pagos por estilista
+    // 🔹 Buscar pagos por estilista con paginación
     @Override
-    public List<PaymentResponse> findByStylistId(Integer stylistId) {
-        return paymentRepository.findByStylistId(stylistId).stream()
+    public List<PaymentResponse> findByStylistId(Integer stylistId, int page, int pageSize) {
+        PageRequest pageReq = PageRequest.of(page, pageSize);
+        Page<Payment> payments = paymentRepository.findByStylistId(stylistId, pageReq);
+        return payments.getContent().stream()
                 .map(PaymentMapper::toResponse)
                 .toList();
     }
 
-    // 🔹 Buscar pagos en un rango de fechas
+    // 🔹 Buscar pagos en un rango de fechas con paginación
     @Override
-    public List<PaymentResponse> findByPaymentDateBetween(LocalDateTime start, LocalDateTime end) {
-        return paymentRepository.findByPaymentDateBetween(start, end).stream()
+    public List<PaymentResponse> findByPaymentDateBetween(LocalDateTime start, LocalDateTime end, int page, int pageSize) {
+        PageRequest pageReq = PageRequest.of(page, pageSize);
+        Page<Payment> payments = paymentRepository.findByPaymentDateBetween(start, end, pageReq);
+        return payments.getContent().stream()
                 .map(PaymentMapper::toResponse)
                 .toList();
     }

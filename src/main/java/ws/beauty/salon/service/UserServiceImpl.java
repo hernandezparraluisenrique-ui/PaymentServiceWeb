@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
@@ -19,6 +20,7 @@ import ws.beauty.salon.repository.ClientRepository;
 import ws.beauty.salon.repository.StylistRepository;
 import ws.beauty.salon.repository.UserRepository;
 
+
 @Service
 @Transactional
 public class UserServiceImpl implements UserService {
@@ -31,6 +33,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private StylistRepository stylistRepository;
+
+    @Autowired
+    private PasswordEncoder passwordEncoder;
 
     @Override
     public List<UserResponse> findAll() {
@@ -59,6 +64,12 @@ public class UserServiceImpl implements UserService {
     public UserResponse create(UserRequest dto) {
         User user = UserMapper.toEntity(dto);
 
+        // 🔐 Encriptar contraseña antes de guardar
+        user.setPassword(passwordEncoder.encode(dto.getPassword()));
+
+        // 🔥 Prefijar el rol con ROLE_
+       user.setRole(dto.getRole().toUpperCase());
+
         // Relación con Client
         if (dto.getClientId() != null) {
             Client client = clientRepository.findById(dto.getClientId())
@@ -84,6 +95,12 @@ public class UserServiceImpl implements UserService {
 
         // Actualiza campos básicos
         UserMapper.copyToEntity(dto, existing);
+
+        // 🔥 Actualizar rol correctamente
+        existing.setRole(dto.getRole().toUpperCase());
+
+        // 🔐 Actualizar contraseña codificada
+        existing.setPassword(passwordEncoder.encode(dto.getPassword()));
 
         // Actualiza relaciones
         if (dto.getClientId() != null) {
@@ -112,7 +129,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<UserResponse> findByRole(String role) {
-        return repository.findByRole(role).stream()
+       return repository.findByRole(role.toUpperCase()).stream()
                 .map(UserMapper::toResponse)
                 .toList();
     }
@@ -126,5 +143,4 @@ public class UserServiceImpl implements UserService {
                 .map(UserMapper::toResponse)
                 .toList();
     }
-
 }

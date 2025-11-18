@@ -6,9 +6,10 @@ import com.fasterxml.jackson.annotation.JsonProperty;
 
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
+import lombok.Builder;
 import lombok.Data;
 
-
+@Builder
 @Data
 public class PaymentRequest {
     @NotNull(message = "Amount is required")

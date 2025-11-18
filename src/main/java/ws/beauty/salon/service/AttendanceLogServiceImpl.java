@@ -24,96 +24,92 @@ public class AttendanceLogServiceImpl implements AttendanceLogService{
    private final AttendanceLogRepository attendanceRepository;
     private final StylistRepository stylistRepository;
 
-    @Override
-    public List<AttendanceLogResponse> findAll() {
-        return attendanceRepository.findAll().stream()
-                .map(AttendanceLogMapper::toResponse)
-                .toList();
-    }
 
-    @Override
-    public List<AttendanceLogResponse> findAll(int page, int pageSize) {
-        PageRequest pageReq = PageRequest.of(page, pageSize);
-        Page<AttendanceLog> pageLogs = attendanceRepository.findAll(pageReq);
-        return pageLogs.getContent().stream()
-                .map(AttendanceLogMapper::toResponse)
-                .toList();
-    }
+// Obtiene los registros de asistencia de forma paginada.
+@Override
+public List<AttendanceLogResponse> findAll(int page, int pageSize) {
+    PageRequest pageReq = PageRequest.of(page, pageSize);
+    Page<AttendanceLog> pageLogs = attendanceRepository.findAll(pageReq);
+    return pageLogs.getContent().stream()
+            .map(AttendanceLogMapper::toResponse)
+            .toList();
+}
 
-    @Override
-    public AttendanceLogResponse findById(Integer idAttendance) {
-        AttendanceLog log = attendanceRepository.findById(idAttendance)
-                .orElseThrow(() -> new EntityNotFoundException("Attendance log not found: " + idAttendance));
-        return AttendanceLogMapper.toResponse(log);
-    }
+// Busca un registro de asistencia por su ID.
+@Override
+public AttendanceLogResponse findById(Integer idAttendance) {
+    AttendanceLog log = attendanceRepository.findById(idAttendance)
+            .orElseThrow(() -> new EntityNotFoundException("Attendance log not found: " + idAttendance));
+    return AttendanceLogMapper.toResponse(log);
+}
 
-    @Override
-    public AttendanceLogResponse create(AttendanceLogRequest request) {
-        Stylist stylist = stylistRepository.findById(request.getStylistId())
-                .orElseThrow(() -> new EntityNotFoundException("Stylist not found: " + request.getStylistId()));
+// Crea un nuevo registro de asistencia (check-in) para un estilista.
+@Override
+public AttendanceLogResponse create(AttendanceLogRequest request) {
+    Stylist stylist = stylistRepository.findById(request.getStylistId())
+            .orElseThrow(() -> new EntityNotFoundException("Stylist not found: " + request.getStylistId()));
 
-        AttendanceLog log = AttendanceLogMapper.toEntity(request, stylist);
-        AttendanceLog saved = attendanceRepository.save(log);
-        return AttendanceLogMapper.toResponse(saved);
-    }
+    AttendanceLog log = AttendanceLogMapper.toEntity(request, stylist);
+    AttendanceLog saved = attendanceRepository.save(log);
+    return AttendanceLogMapper.toResponse(saved);
+}
 
-    @Override
-    public AttendanceLogResponse update(Integer idAttendance, AttendanceLogRequest request) {
-        AttendanceLog existing = attendanceRepository.findById(idAttendance)
-                .orElseThrow(() -> new EntityNotFoundException("Attendance log not found: " + idAttendance));
+// Actualiza un registro de asistencia existente.
+@Override
+public AttendanceLogResponse update(Integer idAttendance, AttendanceLogRequest request) {
+    AttendanceLog existing = attendanceRepository.findById(idAttendance)
+            .orElseThrow(() -> new EntityNotFoundException("Attendance log not found: " + idAttendance));
 
-        Stylist stylist = stylistRepository.findById(request.getStylistId())
-                .orElseThrow(() -> new EntityNotFoundException("Stylist not found: " + request.getStylistId()));
+    Stylist stylist = stylistRepository.findById(request.getStylistId())
+            .orElseThrow(() -> new EntityNotFoundException("Stylist not found: " + request.getStylistId()));
 
-        AttendanceLogMapper.copyToEntity(request, existing, stylist);
-        AttendanceLog saved = attendanceRepository.save(existing);
-        return AttendanceLogMapper.toResponse(saved);
-    }
+    AttendanceLogMapper.copyToEntity(request, existing, stylist);
+    AttendanceLog saved = attendanceRepository.save(existing);
+    return AttendanceLogMapper.toResponse(saved);
+}
 
-    @Override
-    public void delete(Integer idAttendance) {
-        if (!attendanceRepository.existsById(idAttendance)) {
-            throw new EntityNotFoundException("Attendance log not found: " + idAttendance);
-        }
-        attendanceRepository.deleteById(idAttendance);
-    }
+// Obtiene todos los registros de asistencia de un estilista.
+@Override
+public List<AttendanceLogResponse> findByStylistId(Integer stylistId) {
+    return attendanceRepository.findByStylistId(stylistId).stream()
+            .map(AttendanceLogMapper::toResponse)
+            .toList();
+}
 
-    @Override
-    public List<AttendanceLogResponse> findByStylistId(Integer stylistId) {
-        return attendanceRepository.findByStylistId(stylistId).stream()
-                .map(AttendanceLogMapper::toResponse)
-                .toList();
-    }
+// Busca registros cuyo check-in esté dentro de un rango de fechas.
+@Override
+public List<AttendanceLogResponse> findByCheckInBetween(LocalDateTime start, LocalDateTime end) {
+    return attendanceRepository.findByCheckInBetween(start, end).stream()
+            .map(AttendanceLogMapper::toResponse)
+            .toList();
+}
 
-    @Override
-    public List<AttendanceLogResponse> findByCheckInBetween(LocalDateTime start, LocalDateTime end) {
-        return attendanceRepository.findByCheckInBetween(start, end).stream()
-                .map(AttendanceLogMapper::toResponse)
-                .toList();
-    }
+// Verifica si el estilista tiene un registro de asistencia abierto (sin check-out).
+@Override
+public boolean hasOpenAttendance(Integer stylistId) {
+    return attendanceRepository.findByStylistIdAndCheckOutIsNull(stylistId).isPresent();
+}
 
-    @Override
-    public boolean hasOpenAttendance(Integer stylistId) {
-        return attendanceRepository.findByStylistIdAndCheckOutIsNull(stylistId).isPresent();
-    }
+// Cierra la asistencia abierta del estilista (registra el check-out).
+@Override
+public AttendanceLogResponse closeAttendance(Integer stylistId) {
+    AttendanceLog log = attendanceRepository.findByStylistIdAndCheckOutIsNull(stylistId)
+            .orElseThrow(() -> new EntityNotFoundException("No open attendance found for stylist: " + stylistId));
 
-    @Override
-    public AttendanceLogResponse closeAttendance(Integer stylistId) {
-        AttendanceLog log = attendanceRepository.findByStylistIdAndCheckOutIsNull(stylistId)
-                .orElseThrow(() -> new EntityNotFoundException("No open attendance found for stylist: " + stylistId));
+    log.setCheckOut(LocalDateTime.now());
+    AttendanceLog saved = attendanceRepository.save(log);
+    return AttendanceLogMapper.toResponse(saved);
+}
 
-        log.setCheckOut(LocalDateTime.now());
-        AttendanceLog saved = attendanceRepository.save(log);
-        return AttendanceLogMapper.toResponse(saved);
-    }
+// Cuenta cuántos registros de asistencia tiene un estilista.
+@Override
+public long countByStylistId(Integer stylistId) {
+    return attendanceRepository.countByStylistId(stylistId);
+}
 
-    @Override
-    public long countByStylistId(Integer stylistId) {
-        return attendanceRepository.countByStylistId(stylistId);
-    }
-
-    @Override
-    public long countByCheckInBetween(LocalDateTime start, LocalDateTime end) {
-        return attendanceRepository.countByCheckInBetween(start, end);
-    }
+// Cuenta los registros cuyo check-in está dentro de un rango de fechas.
+@Override
+public long countByCheckInBetween(LocalDateTime start, LocalDateTime end) {
+    return attendanceRepository.countByCheckInBetween(start, end);
+}   
 }

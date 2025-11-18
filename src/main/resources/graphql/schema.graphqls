@@ -1,0 +1,43 @@
+schema {
+  query: Query
+  mutation: Mutation
+}
+
+# ----------------------
+# Query solo Payments
+# ----------------------
+type Query {
+  findAllPaymentsPaged(page: Int, pageSize: Int): [PaymentResponse]
+  findPaymentById(idPayment: Int): PaymentResponse
+  findPaymentByAppointmentId(appointmentId: Int): PaymentResponse
+  findPaymentsByClientId(clientId: Int): [PaymentResponse]
+  findPaymentsByStylistId(stylistId: Int): [PaymentResponse]
+  findPaymentsByDateRange(start: String!, end: String!): [PaymentResponse]
+  getTotalPaymentsBetweenDates(start: String!, end: String!): Float
+  getTotalPaymentsByClient(clientId: Int!): Float
+  getTotalPaymentsByStylist(stylistId: Int!): Float
+  existsPaymentByAppointment(appointmentId: Int!): Boolean
+}
+
+# ----------------------
+# Mutation solo Payments
+# ----------------------
+type Mutation {
+  createPayment(request: PaymentRequest!): PaymentResponse
+}
+
+# ----------------------
+# Tipos e Inputs solo Payments
+# ----------------------
+type PaymentResponse {
+  id: ID!
+  amount: Float!
+  paymentDate: String
+  appointmentId: Int!
+}
+
+input PaymentRequest {
+  amount: Float!
+  paymentDate: String
+  appointmentId: Int!
+}

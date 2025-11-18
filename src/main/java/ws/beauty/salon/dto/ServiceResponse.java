@@ -12,19 +12,19 @@ import lombok.Setter;
 public class ServiceResponse {
      private Integer id;
 
-    @JsonProperty("service_name")
+    @JsonProperty("service name")
     private String serviceName;
 
     private String description;
 
     private Double price;
 
-    @JsonProperty("estimated_duration")
+    @JsonProperty("estimated duration")
     private Duration estimatedDuration;
 
-    @JsonProperty("category_name")
+    @JsonProperty("category name")
     private String categoryName;
 
-    @JsonProperty("created_at")
+    @JsonProperty("created at")
     private LocalDateTime createdAt;
 }

@@ -14,8 +14,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class ServiceRequest {
+
     @NotBlank(message = "Service name is required")
-    @JsonProperty("service_name")
+    @JsonProperty("service name")
     private String serviceName;
 
     @JsonProperty("description")
@@ -26,9 +27,14 @@ public class ServiceRequest {
     @JsonProperty("price")
     private Double price;
 
-    @JsonProperty("estimated_duration")
+    @JsonProperty("estimated duration")
     private Duration estimatedDuration;
 
-    @JsonProperty("id_category")
+
+    @JsonProperty("category name")
+    private String categoryName;
+
+
+    @JsonProperty("id category")
     private Integer categoryId;
 }
