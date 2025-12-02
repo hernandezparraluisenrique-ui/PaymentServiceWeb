@@ -12,10 +12,9 @@ import lombok.RequiredArgsConstructor;
 import ws.beauty.salon.dto.PaymentRequest;
 import ws.beauty.salon.dto.PaymentResponse;
 import ws.beauty.salon.mapper.PaymentMapper;
-import ws.beauty.salon.model.Appointment;
 import ws.beauty.salon.model.Payment;
-import ws.beauty.salon.repository.AppointmentRepository;
 import ws.beauty.salon.repository.PaymentRepository;
+import client.AppointmentGatewayClient;
 
 
 
@@ -24,10 +23,39 @@ import ws.beauty.salon.repository.PaymentRepository;
 public class PaymentServiceImpl implements PaymentService {
 
 
-    private final PaymentRepository paymentRepository;
-    private final AppointmentRepository appointmentRepository;
+     private final PaymentRepository paymentRepository;
+    private final AppointmentGatewayClient apiGatewayClient; // ⬅️ FEIGN CLIENT QUE PASA POR EL GATEWAY
 
+    // -------------------------------------------------------------
+    // 🔹 Crear un nuevo pago (VALIDA Appointment DESDE API GATEWAY)
+    // -------------------------------------------------------------
+@Override
+public PaymentResponse create(PaymentRequest request) {
+
+    // 1️⃣ Validar que la cita existe via API Gateway
+    var appointment = apiGatewayClient.getAppointmentById(request.getAppointmentId());
+
+    if (appointment == null) {
+        throw new EntityNotFoundException("Appointment not found: " + request.getAppointmentId());
+    }
+
+    // 2️⃣ Crear el pago (solo lo que esta en la tabla Payments)
+    Payment payment = PaymentMapper.toEntity(request);
+
+    // Asegurar la fecha si no viene
+    if (payment.getPaymentDate() == null) {
+        payment.setPaymentDate(LocalDateTime.now());
+    }
+
+    // 3️⃣ Guardar
+    Payment saved = paymentRepository.save(payment);
+
+    return PaymentMapper.toResponse(saved);
+}
+
+    // -------------------------------------------------------------
     // 🔹 Obtener todos los pagos con paginación
+    // -------------------------------------------------------------
     @Override
     public List<PaymentResponse> findAll(int page, int pageSize) {
         PageRequest pageReq = PageRequest.of(page, pageSize);
@@ -37,7 +65,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .toList();
     }
 
-    // 🔹 Obtener un pago por su ID
+    // -------------------------------------------------------------
+    // 🔹 Obtener un pago por ID
+    // -------------------------------------------------------------
     @Override
     public PaymentResponse findById(Integer idPayment) {
         Payment payment = paymentRepository.findById(idPayment)
@@ -45,27 +75,20 @@ public class PaymentServiceImpl implements PaymentService {
         return PaymentMapper.toResponse(payment);
     }
 
-    // 🔹 Crear un nuevo pago
-    @Override
-    public PaymentResponse create(PaymentRequest request) {
-        Appointment appointment = appointmentRepository.findById(request.getAppointmentId())
-                .orElseThrow(() -> new EntityNotFoundException("Appointment not found: " + request.getAppointmentId()));
-
-        Payment payment = PaymentMapper.toEntity(request, appointment);
-        Payment saved = paymentRepository.save(payment);
-        return PaymentMapper.toResponse(saved);
-    }
-
-   
-    // 🔹 Buscar pago por ID de cita
+    // -------------------------------------------------------------
+    // 🔹 Buscar pago por ID de cita (NO necesita Gateway)
+    // -------------------------------------------------------------
     @Override
     public PaymentResponse findByAppointmentId(Integer appointmentId) {
         Payment payment = paymentRepository.findByAppointmentId(appointmentId)
-                .orElseThrow(() -> new EntityNotFoundException("Payment not found for appointment ID: " + appointmentId));
+                .orElseThrow(() -> new EntityNotFoundException(
+                        "Payment not found for appointment ID: " + appointmentId));
         return PaymentMapper.toResponse(payment);
     }
 
-    // 🔹 Buscar pagos por cliente con paginación
+    // -------------------------------------------------------------
+    // 🔹 Buscar pagos por cliente
+    // -------------------------------------------------------------
     @Override
     public List<PaymentResponse> findByClientId(Integer clientId, int page, int pageSize) {
         PageRequest pageReq = PageRequest.of(page, pageSize);
@@ -75,7 +98,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .toList();
     }
 
-    // 🔹 Buscar pagos por estilista con paginación
+    // -------------------------------------------------------------
+    // 🔹 Buscar pagos por estilista
+    // -------------------------------------------------------------
     @Override
     public List<PaymentResponse> findByStylistId(Integer stylistId, int page, int pageSize) {
         PageRequest pageReq = PageRequest.of(page, pageSize);
@@ -85,7 +110,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .toList();
     }
 
-    // 🔹 Buscar pagos en un rango de fechas con paginación
+    // -------------------------------------------------------------
+    // 🔹 Buscar por rango de fechas
+    // -------------------------------------------------------------
     @Override
     public List<PaymentResponse> findByPaymentDateBetween(LocalDateTime start, LocalDateTime end, int page, int pageSize) {
         PageRequest pageReq = PageRequest.of(page, pageSize);
@@ -95,25 +122,33 @@ public class PaymentServiceImpl implements PaymentService {
                 .toList();
     }
 
-    // 🔹 Calcular total de pagos en un rango de fechas
+    // -------------------------------------------------------------
+    // 🔹 Total por rango
+    // -------------------------------------------------------------
     @Override
     public Double getTotalAmountBetweenDates(LocalDateTime start, LocalDateTime end) {
         return paymentRepository.getTotalAmountBetweenDates(start, end);
     }
 
-    // 🔹 Calcular total de pagos por cliente
+    // -------------------------------------------------------------
+    // 🔹 Total por cliente
+    // -------------------------------------------------------------
     @Override
     public Double getTotalAmountByClient(Integer clientId) {
         return paymentRepository.getTotalAmountByClient(clientId);
     }
 
-    // 🔹 Calcular total de pagos por estilista
+    // -------------------------------------------------------------
+    // 🔹 Total por estilista
+    // -------------------------------------------------------------
     @Override
     public Double getTotalAmountByStylist(Integer stylistId) {
         return paymentRepository.getTotalAmountByStylist(stylistId);
     }
 
-    // 🔹 Verificar si existe un pago para una cita
+    // -------------------------------------------------------------
+    // 🔹 Validar si existe un pago por cita
+    // -------------------------------------------------------------
     @Override
     public boolean existsByAppointmentId(Integer appointmentId) {
         return paymentRepository.existsByAppointmentId(appointmentId);

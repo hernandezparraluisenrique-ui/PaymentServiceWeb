@@ -23,7 +23,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import lombok.RequiredArgsConstructor;
 
-
+/* 
 
 @Configuration
 @EnableWebSecurity
@@ -87,3 +87,4 @@ public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Excepti
         return config.getAuthenticationManager();
     }
 }
+    */

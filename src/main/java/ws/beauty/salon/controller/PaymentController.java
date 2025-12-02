@@ -33,7 +33,6 @@ public class PaymentController {
 
 private final PaymentService service;
 
-
     // 🔹 Obtener todos los pagos con paginación
     @GetMapping(params = { "page", "pageSize" })
     @Operation(summary = "Get all payments with pagination")
@@ -65,8 +64,6 @@ private final PaymentService service;
                 .created(URI.create("/api/v1/payments/" + created.getId()))
                 .body(created);
     }
-
-   
 
     // 🔹 Buscar pago por ID de cita
     @GetMapping("/appointment/{appointmentId}")
