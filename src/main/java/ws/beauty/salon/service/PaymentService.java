@@ -14,7 +14,7 @@ import ws.beauty.salon.dto.PaymentResponse;
 @Transactional
 public interface  PaymentService {
     
-    // 🔹 Obtener lista paginada de pagos
+      // 🔹 Obtener lista paginada de pagos
     List<PaymentResponse> findAll(int page, int pageSize);
 
     // 🔹 Obtener un pago por su ID
@@ -23,14 +23,13 @@ public interface  PaymentService {
     // 🔹 Crear un nuevo pago
     PaymentResponse create(PaymentRequest request);
 
-
     // 🔹 Buscar pago por ID de cita
     PaymentResponse findByAppointmentId(Integer appointmentId);
 
-    // 🔹 Buscar pagos por cliente con paginación
+    // 🔹 Buscar pagos por cliente con paginación (via API Gateway)
     List<PaymentResponse> findByClientId(Integer clientId, int page, int pageSize);
 
-    // 🔹 Buscar pagos por estilista con paginación
+    // 🔹 Buscar pagos por estilista con paginación (via API Gateway)
     List<PaymentResponse> findByStylistId(Integer stylistId, int page, int pageSize);
 
     // 🔹 Buscar pagos en un rango de fechas con paginación
@@ -39,12 +38,14 @@ public interface  PaymentService {
     // 🔹 Calcular total de pagos en un rango de fechas
     Double getTotalAmountBetweenDates(LocalDateTime start, LocalDateTime end);
 
-    // 🔹 Calcular total de pagos por cliente
+    // 🔹 Calcular total de pagos por cliente (via API Gateway)
     Double getTotalAmountByClient(Integer clientId);
 
-    // 🔹 Calcular total de pagos por estilista
+    // 🔹 Calcular total de pagos por estilista (via API Gateway)
     Double getTotalAmountByStylist(Integer stylistId);
 
     // 🔹 Verificar si existe un pago para una cita
     boolean existsByAppointmentId(Integer appointmentId);
+
+    
 }

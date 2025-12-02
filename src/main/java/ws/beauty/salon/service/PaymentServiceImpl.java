@@ -23,35 +23,31 @@ import client.AppointmentGatewayClient;
 public class PaymentServiceImpl implements PaymentService {
 
 
-     private final PaymentRepository paymentRepository;
-    private final AppointmentGatewayClient apiGatewayClient; // ⬅️ FEIGN CLIENT QUE PASA POR EL GATEWAY
+      private final PaymentRepository paymentRepository;
+    private final AppointmentGatewayClient apiGatewayClient; // FEIGN CLIENT que pasa por el Gateway
 
     // -------------------------------------------------------------
     // 🔹 Crear un nuevo pago (VALIDA Appointment DESDE API GATEWAY)
     // -------------------------------------------------------------
-@Override
-public PaymentResponse create(PaymentRequest request) {
+    @Override
+    public PaymentResponse create(PaymentRequest request) {
 
-    // 1️⃣ Validar que la cita existe via API Gateway
-    var appointment = apiGatewayClient.getAppointmentById(request.getAppointmentId());
+        var appointment = apiGatewayClient.getAppointmentById(request.getAppointmentId());
 
-    if (appointment == null) {
-        throw new EntityNotFoundException("Appointment not found: " + request.getAppointmentId());
+        if (appointment == null) {
+            throw new EntityNotFoundException("Appointment not found: " + request.getAppointmentId());
+        }
+
+        Payment payment = PaymentMapper.toEntity(request);
+
+        if (payment.getPaymentDate() == null) {
+            payment.setPaymentDate(LocalDateTime.now());
+        }
+
+        Payment saved = paymentRepository.save(payment);
+
+        return PaymentMapper.toResponse(saved);
     }
-
-    // 2️⃣ Crear el pago (solo lo que esta en la tabla Payments)
-    Payment payment = PaymentMapper.toEntity(request);
-
-    // Asegurar la fecha si no viene
-    if (payment.getPaymentDate() == null) {
-        payment.setPaymentDate(LocalDateTime.now());
-    }
-
-    // 3️⃣ Guardar
-    Payment saved = paymentRepository.save(payment);
-
-    return PaymentMapper.toResponse(saved);
-}
 
     // -------------------------------------------------------------
     // 🔹 Obtener todos los pagos con paginación
@@ -76,7 +72,7 @@ public PaymentResponse create(PaymentRequest request) {
     }
 
     // -------------------------------------------------------------
-    // 🔹 Buscar pago por ID de cita (NO necesita Gateway)
+    // 🔹 Buscar pago por ID de cita
     // -------------------------------------------------------------
     @Override
     public PaymentResponse findByAppointmentId(Integer appointmentId) {
@@ -87,24 +83,38 @@ public PaymentResponse create(PaymentRequest request) {
     }
 
     // -------------------------------------------------------------
-    // 🔹 Buscar pagos por cliente
+    // 🔹 Buscar pagos por cliente (filtrando por appointments desde Gateway)
     // -------------------------------------------------------------
     @Override
     public List<PaymentResponse> findByClientId(Integer clientId, int page, int pageSize) {
+        // 1️⃣ Traer todas las appointments del cliente
+        List<Integer> appointmentIds = apiGatewayClient.getAppointmentsByClientId(clientId)
+                .stream().map(a -> a.getIdAppointment()).toList();
+
+        if (appointmentIds.isEmpty()) return List.of();
+
+        // 2️⃣ Filtrar los payments locales
         PageRequest pageReq = PageRequest.of(page, pageSize);
-        Page<Payment> payments = paymentRepository.findByClientId(clientId, pageReq);
+        Page<Payment> payments = paymentRepository.findAllByAppointmentIdIn(appointmentIds, pageReq);
+
         return payments.getContent().stream()
                 .map(PaymentMapper::toResponse)
                 .toList();
     }
 
     // -------------------------------------------------------------
-    // 🔹 Buscar pagos por estilista
+    // 🔹 Buscar pagos por estilista (filtrando por appointments desde Gateway)
     // -------------------------------------------------------------
     @Override
     public List<PaymentResponse> findByStylistId(Integer stylistId, int page, int pageSize) {
+        List<Integer> appointmentIds = apiGatewayClient.getAppointmentsByStylistId(stylistId)
+                .stream().map(a -> a.getIdAppointment()).toList();
+
+        if (appointmentIds.isEmpty()) return List.of();
+
         PageRequest pageReq = PageRequest.of(page, pageSize);
-        Page<Payment> payments = paymentRepository.findByStylistId(stylistId, pageReq);
+        Page<Payment> payments = paymentRepository.findAllByAppointmentIdIn(appointmentIds, pageReq);
+
         return payments.getContent().stream()
                 .map(PaymentMapper::toResponse)
                 .toList();
@@ -131,19 +141,29 @@ public PaymentResponse create(PaymentRequest request) {
     }
 
     // -------------------------------------------------------------
-    // 🔹 Total por cliente
+    // 🔹 Total por cliente (filtrando por appointments)
     // -------------------------------------------------------------
     @Override
     public Double getTotalAmountByClient(Integer clientId) {
-        return paymentRepository.getTotalAmountByClient(clientId);
+        List<Integer> appointmentIds = apiGatewayClient.getAppointmentsByClientId(clientId)
+                .stream().map(a -> a.getIdAppointment()).toList();
+
+        if (appointmentIds.isEmpty()) return 0.0;
+
+        return paymentRepository.getTotalAmountByAppointmentIds(appointmentIds);
     }
 
     // -------------------------------------------------------------
-    // 🔹 Total por estilista
+    // 🔹 Total por estilista (filtrando por appointments)
     // -------------------------------------------------------------
     @Override
     public Double getTotalAmountByStylist(Integer stylistId) {
-        return paymentRepository.getTotalAmountByStylist(stylistId);
+        List<Integer> appointmentIds = apiGatewayClient.getAppointmentsByStylistId(stylistId)
+                .stream().map(a -> a.getIdAppointment()).toList();
+
+        if (appointmentIds.isEmpty()) return 0.0;
+
+        return paymentRepository.getTotalAmountByAppointmentIds(appointmentIds);
     }
 
     // -------------------------------------------------------------

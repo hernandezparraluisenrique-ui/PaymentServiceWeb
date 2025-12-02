@@ -13,15 +13,14 @@ import ws.beauty.salon.dto.AppointmentResponse;
         url = "${gateway.url}" // http://localhost:8080 o Render URL
 )  
 public interface AppointmentGatewayClient {
-    @GetMapping("/core/api/v1/appointments/{id}")
-    AppointmentResponse getAppointment(@PathVariable Integer id);
+  
+    @GetMapping("/appointments/{id}")
+    AppointmentResponse getAppointmentById(@PathVariable("id") Integer appointmentId);
 
-    @GetMapping("/core/api/v1/appointments/client/{clientId}")
-    List<AppointmentResponse> getAppointmentsByClient(@PathVariable Integer clientId);
+    @GetMapping("/appointments/client/{clientId}")
+    List<AppointmentResponse> getAppointmentsByClientId(@PathVariable("clientId") Integer clientId);
 
-    @GetMapping("/core/api/v1/appointments/stylist/{stylistId}")
-    List<AppointmentResponse> getAppointmentsByStylist(@PathVariable Integer stylistId);
-    
-    AppointmentResponse getAppointmentById(Integer appointmentId);
+    @GetMapping("/appointments/stylist/{stylistId}")
+    List<AppointmentResponse> getAppointmentsByStylistId(@PathVariable("stylistId") Integer stylistId);
 
 }
