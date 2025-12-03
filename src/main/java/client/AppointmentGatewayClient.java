@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import ws.beauty.salon.dto.AppointmentResponse;
 
 @FeignClient(
-    name = "api-gateway",
+    name = "BEAUTY-SALON-REST",
     url = "https://beauty-salon-gateway.onrender.com"
 )
 public interface AppointmentGatewayClient {
