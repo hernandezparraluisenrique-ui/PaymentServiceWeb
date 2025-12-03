@@ -1,4 +1,4 @@
-package client;
+package ws.beauty.salon.client;
 
 import java.util.List;
 

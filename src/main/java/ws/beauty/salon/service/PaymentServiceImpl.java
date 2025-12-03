@@ -9,12 +9,12 @@ import org.springframework.stereotype.Service;
 
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
+import ws.beauty.salon.client.AppointmentGatewayClient;
 import ws.beauty.salon.dto.PaymentRequest;
 import ws.beauty.salon.dto.PaymentResponse;
 import ws.beauty.salon.mapper.PaymentMapper;
 import ws.beauty.salon.model.Payment;
 import ws.beauty.salon.repository.PaymentRepository;
-import client.AppointmentGatewayClient;
 
 
 
