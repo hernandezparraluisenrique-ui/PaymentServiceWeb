@@ -9,18 +9,17 @@ import org.springframework.web.bind.annotation.PathVariable;
 import ws.beauty.salon.dto.AppointmentResponse;
 
 @FeignClient(
-        name = "api-gateway",
-        url = "${gateway.url}" // http://localhost:8080 o Render URL
-)  
+    name = "api-gateway",
+    url = "https://beauty-salon-gateway.onrender.com"
+)
 public interface AppointmentGatewayClient {
-  
-    @GetMapping("/appointments/{id}")
-    AppointmentResponse getAppointmentById(@PathVariable("id") Integer appointmentId);
 
-    @GetMapping("/appointments/client/{clientId}")
-    List<AppointmentResponse> getAppointmentsByClientId(@PathVariable("clientId") Integer clientId);
+    @GetMapping("/api/v1/appointments/{id}")
+    AppointmentResponse getAppointmentById(@PathVariable Integer id);
 
-    @GetMapping("/appointments/stylist/{stylistId}")
-    List<AppointmentResponse> getAppointmentsByStylistId(@PathVariable("stylistId") Integer stylistId);
+    @GetMapping("/api/v1/appointments/client/{clientId}")
+    List<AppointmentResponse> getAppointmentsByClientId(@PathVariable Integer clientId);
 
+    @GetMapping("/api/v1/appointments/stylist/{stylistId}")
+    List<AppointmentResponse> getAppointmentsByStylistId(@PathVariable Integer stylistId);
 }
